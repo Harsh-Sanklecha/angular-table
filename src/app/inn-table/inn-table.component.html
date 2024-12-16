@@ -1,5 +1,59 @@
-<table>
-    <thead></thead>
-    <tbody></tbody>
-    <tfoot></tfoot>
-</table>
+<div class="inn-table">
+    <div class="inn-table-header">
+        <div class="inn-pinned-left-header" [style.width.px]="leftPinnedWidth">
+            @for (header of _leftPinnedColumns; track $index) {
+            <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'left' }"></ng-container>
+            }
+        </div>
+        <div class="inn-header-viewport" #headerContainer (scroll)="headerScrolled($event)">
+            @for (header of _centerColumns; track $index) {
+            <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'center' }"></ng-container>
+            }
+        </div>
+        <div class="inn-pinned-right-header" [style.width.px]="columnWidth * _rightPinnedColumns.length">
+            @for (header of _rightPinnedColumns; track $index) {
+            <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'right' }"></ng-container>
+            }
+        </div>
+    </div>
+
+    <div class="inn-floating-top"></div>
+    <div class="inn-table-body">
+        <div class="inn-pinned-left-cols-container" [style.width.px]="leftPinnedWidth">
+            <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _leftPinnedColumns }"></ng-container>
+        </div>
+        <div class="inn-center-cols-container" #bodyContainer (scroll)="bodyScrolled($event)">
+            <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _centerColumns }"></ng-container>
+        </div>
+        <div class="inn-pinned-right-cols-container" [style.width.px]="columnWidth * _rightPinnedColumns.length">
+            <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _rightPinnedColumns }"></ng-container>
+        </div>
+    </div>
+    <div class="inn-floating-bottom"></div>
+</div>
+
+<ng-template #headerTemplate let-header="header" let-index="index" let-align="align">
+    <div class="inn-table-header-cell" [innColumnResize]="header"
+        (columnWidthChange)="onColumnWidthChange($event, index, align)" [style.left.px]="header.position"
+        [style.width.px]="header.width" [attr.col-index]="header.index + 1"
+        (click)="onHeaderClick($event, header)">
+        <div class="label text-truncate-1" [style.width.px]="header.width">
+            {{ header.field }}
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #bodyTemplate let-columns="columns">
+    @for (row of rowData; track $index; let i=$index) {
+    <div class="inn-table-row">
+        @for (column of columns; track j; let j = $index) {
+        <div class="inn-table-cell" [style.left.px]="column.position" [style.width.px]="column.width"
+            [style.height.px]="rowHeight" [style.transform]="'translateY(' + (i * rowHeight) + 'px)'">
+            <div class="label text-truncate-1" [style.width.px]="column.width">
+                {{ row[column.field] }}
+            </div>
+        </div>
+        }
+    </div>
+    }
+</ng-template>

@@ -1,16 +1,16 @@
 import { Meta, StoryObj } from "@storybook/angular";
-import { InnTableComponent } from "./inn-table.component";
+import { InnTable } from "./inn-table.component";
 
-const meta: Meta<InnTableComponent> = {
+const meta: Meta<InnTable> = {
     title: "Inn-Table",
-    component: InnTableComponent,
+    component: InnTable,
     tags: ['autodocs'],
     argTypes: {
         // props
     },
 };
 export default meta;
-type Story = StoryObj<InnTableComponent>;
+type Story = StoryObj<InnTable>;
 export const Default: Story = {
     args: {},
 };

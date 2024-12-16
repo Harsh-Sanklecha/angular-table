@@ -1,0 +1,100 @@
+.inn-table {
+    height: 20vh;
+    box-sizing: border-box;
+}
+
+.inn-table-header {
+    position: relative;
+    height: 48px;
+    display: flex;
+}
+
+.inn-pinned-left-header,
+.inn-header-viewport,
+.inn-pinned-right-header {
+    position: relative;
+}
+
+.inn-pinned-left-header {
+    border-right: 1px solid #ccc;
+}
+
+.inn-header-viewport {
+    flex: 1 1 auto;
+    overflow-x: auto;
+    scrollbar-width: none !important;
+}
+
+.inn-pinned-right-header {
+    border-left: 1px solid #ccc;
+
+    .column-resize-handle {
+        left: 3px;
+    }
+}
+
+.inn-table-header-cell {
+    background-color: rgba(112, 123, 145, 0.04);
+    position: absolute;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    text-transform: capitalize;
+    padding-inline: 1rem;
+    cursor: pointer;
+}
+
+.column-resize-handle {
+    position: absolute;
+    z-index: 2;
+    height: 100%;
+    width: 8px;
+    top: 0;
+    right: -4px;
+    cursor: ew-resize;
+
+    &::after {
+        content: "";
+        position: absolute;
+        z-index: 1;
+        width: 2px;
+        height: 30%;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: #ccc;
+    }
+}
+
+.inn-pinned-left-cols-container,
+.inn-center-cols-container,
+.inn-pinned-right-cols-container {
+    position: relative;
+}
+
+.inn-pinned-left-cols-container {
+    border-right: 1px solid #ccc;
+}
+
+.inn-pinned-right-cols-container {
+    border-left: 1px solid #ccc;
+}
+
+.inn-center-cols-container {
+    flex: 1 1 auto;
+    overflow-x: auto;
+}
+
+.inn-table-body {
+    position: relative;
+    height: 100%;
+    display: flex;
+}
+
+.inn-table-cell {
+    position: absolute;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding-inline: 1rem;
+}
+
