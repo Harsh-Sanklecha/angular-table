@@ -42,6 +42,7 @@
     text-transform: capitalize;
     padding-inline: 1rem;
     cursor: pointer;
+    overflow: hidden;
 }
 
 .column-resize-handle {
@@ -65,6 +66,12 @@
     }
 }
 
+.inn-table-body {
+    position: relative;
+    height: 100%;
+    display: flex;
+}
+
 .inn-pinned-left-cols-container,
 .inn-center-cols-container,
 .inn-pinned-right-cols-container {
@@ -84,10 +91,8 @@
     overflow-x: auto;
 }
 
-.inn-table-body {
-    position: relative;
-    height: 100%;
-    display: flex;
+.inn-table-row {
+    position: absolute;
 }
 
 .inn-table-cell {

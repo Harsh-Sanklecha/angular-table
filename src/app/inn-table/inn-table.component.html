@@ -10,7 +10,7 @@
             <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'center' }"></ng-container>
             }
         </div>
-        <div class="inn-pinned-right-header" [style.width.px]="columnWidth * _rightPinnedColumns.length">
+        <div class="inn-pinned-right-header" [style.width.px]="rightPinnedWidth">
             @for (header of _rightPinnedColumns; track $index) {
             <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'right' }"></ng-container>
             }
@@ -25,7 +25,7 @@
         <div class="inn-center-cols-container" #bodyContainer (scroll)="bodyScrolled($event)">
             <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _centerColumns }"></ng-container>
         </div>
-        <div class="inn-pinned-right-cols-container" [style.width.px]="columnWidth * _rightPinnedColumns.length">
+        <div class="inn-pinned-right-cols-container" [style.width.px]="rightPinnedWidth">
             <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _rightPinnedColumns }"></ng-container>
         </div>
     </div>
@@ -45,10 +45,9 @@
 
 <ng-template #bodyTemplate let-columns="columns">
     @for (row of rowData; track $index; let i=$index) {
-    <div class="inn-table-row">
+    <div class="inn-table-row" [style.height.px]="rowHeight" [style.transform]="'translateY(' + (i * rowHeight) + 'px)'">
         @for (column of columns; track j; let j = $index) {
-        <div class="inn-table-cell" [style.left.px]="column.position" [style.width.px]="column.width"
-            [style.height.px]="rowHeight" [style.transform]="'translateY(' + (i * rowHeight) + 'px)'">
+        <div class="inn-table-cell" [style.left.px]="column.position" [style.width.px]="column.width">
             <div class="label text-truncate-1" [style.width.px]="column.width">
                 {{ row[column.field] }}
             </div>

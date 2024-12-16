@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
-import { ColDef, ProcessedColumn } from './inn-table.type';
+import { ColDef, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
 import { NgTemplateOutlet } from '@angular/common';
-import { SortDirection } from 'ag-grid-community';
 
 @Component({
   selector: 'app-inn-table',
@@ -146,12 +145,6 @@ export class InnTable implements OnChanges {
 
       if (valueA == null) return direction === 'asc' ? 1 : -1;
       if (valueB == null) return direction === 'asc' ? -1 : 1;
-
-      if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return direction === 'asc'
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
-      }
 
       return direction === 'asc'
         ? (valueA > valueB ? 1 : -1)
