@@ -14,21 +14,15 @@ export class AgGridComponent {
     editable: true,
   };
 
-  rowData = [
-    { make: "Tesla", model: "Model Y", price: 64950, date: new Date(), electric: true },
-    { make: "Ford", model: "F-Series", price: 33850, electric: false },
-    { make: "Toyota", model: "Corolla", price: 29600, electric: false },
-  ];
-
   // Column Definitions: Defines the columns to be displayed.
   colDefs: any[] = [
-    // {
-    //   headerName: 'Name & Country',
-    //   children: [
-    //     { field: 'athlete' },
-    //     { field: 'country' }
-    //   ]
-    // },
+    {
+      headerName: 'Name & Country',
+      children: [
+        { field: 'horsePower' },
+        { field: 'country' }
+      ]
+    },
     { field: "make", pinned: 'left' },
     { field: "model" },
     { field: "price" },
@@ -41,5 +35,20 @@ export class AgGridComponent {
     { field: "electric" },
     { field: "electric" },
   ];
+
+  rowData = [
+    { make: "Tesla", model: "Model Y", price: 64950, date: new Date(), electric: true, horsePower: 100, country: 'USA' },
+    { make: "Ford", model: "F-Series", price: 33850, electric: false },
+    { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+  ];
+
+  pinnedTopRowData: any[] = [
+    { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+  ];
+
+  pinnedBottomRowData: any[] = [
+    // { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+  ];
+
 
 }

@@ -13,6 +13,7 @@
 .inn-header-viewport,
 .inn-pinned-right-header {
     position: relative;
+    background-color: rgba(112, 123, 145, 0.04);
 }
 
 .inn-pinned-left-header {
@@ -34,7 +35,6 @@
 }
 
 .inn-table-header-cell {
-    background-color: rgba(112, 123, 145, 0.04);
     position: absolute;
     height: 100%;
     display: flex;
@@ -93,6 +93,8 @@
 
 .inn-table-row {
     position: absolute;
+    width: 100%;
+    border-bottom: 1px solid #ccc;
 }
 
 .inn-table-cell {

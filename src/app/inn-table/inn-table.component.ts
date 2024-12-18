@@ -14,6 +14,9 @@ export class InnTable implements OnChanges {
   @Input() columnDefs: ColDef[] = [];
   @Input() rowData: any[] = [];
 
+  @Input() pinnedTopRowData: any[] = [];
+  @Input() pinnedBottomRowData: any[] = [];
+
   @Input() rowHeight: number = 48;
   @Input() columnWidth: number = 200;
 
