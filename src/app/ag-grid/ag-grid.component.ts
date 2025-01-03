@@ -26,13 +26,13 @@ export class AgGridComponent {
         { field: 'country' },
       ],
     },
-    // {
-    //   headerName: 'Names & Country',
-    //   children: [
-    //     { field: 'name' },
-    //     { field: 'country' },
-    //   ],
-    // },
+    {
+      headerName: 'Names & Country',
+      children: [
+        { field: 'name' },
+        { field: 'country' },
+      ],
+    },
     { field: "date", pinned: 'right' },
     { field: "electric" },
     { field: "electric" },
@@ -46,7 +46,7 @@ export class AgGridComponent {
   ];
 
   pinnedTopRowData: any[] = [
-    // { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+    { make: "Toyota", model: "Corolla", price: 29600, electric: false },
   ];
 
   pinnedBottomRowData: any[] = [

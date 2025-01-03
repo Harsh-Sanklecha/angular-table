@@ -139,16 +139,26 @@ export class InnTable implements OnChanges {
     for (let i = index + 1; i < column.length; i++) {
       const lastColumn = column[i - 1].layoutStyles as { [key: string]: any }
       (column[i].layoutStyles as { [key: string]: any })['left'] = +(lastColumn?.['left']?.replace('px', '') ?? 0) + +(lastColumn?.['width']?.replace('px', '') || 0) + 'px';
+
+      if (column[i].parentHeader) {
+        // TODO: Move Grouped Header
+      }
     }
 
     if(header.parentHeader) {
-      const groupColumn = this._centerColumnGroup.find(col => col.headerName === header.parentHeader);
+      const groupColumnIndex = this._centerColumnGroup.findIndex(col => col.headerName === header.parentHeader); // TODO Change to index or reference
+      const groupColumn = this._centerColumnGroup[groupColumnIndex];
       const children = this._centerColumns.filter(col => col.parentHeader === header.parentHeader);
 
       if(groupColumn) {
         groupColumn.styles = {
           ...groupColumn.styles,
           width: children?.reduce((acc, curr) => acc + +((curr.layoutStyles?.['width'] as string)?.replace('px', '') ?? 0), 0) + 'px'
+        }
+
+        for (let i = groupColumnIndex + 1; i < this._centerColumnGroup.length; i++) {
+          const lastColumn = this._centerColumnGroup[i - 1].styles as { [key: string]: any }
+          (this._centerColumnGroup[i].styles as { [key: string]: any })['left'] = +(lastColumn?.['left']?.replace('px', '') ?? 0) + +(lastColumn?.['width']?.replace('px', '') || 0) + 'px';
         }
       }
     }
