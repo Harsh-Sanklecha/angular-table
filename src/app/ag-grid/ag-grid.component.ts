@@ -16,21 +16,24 @@ export class AgGridComponent {
 
   // Column Definitions: Defines the columns to be displayed.
   colDefs: any[] = [
+    { field: "make", pinned: 'left' },
+    { field: "model" },
+    { field: "price" },
     {
       headerName: 'Name & Country',
       children: [
         { field: 'horsePower' },
-        { field: 'country' }
-      ]
+        { field: 'country' },
+      ],
     },
-    { field: "make", pinned: 'left' },
-    { field: "model" },
-    { field: "price" },
+    // {
+    //   headerName: 'Names & Country',
+    //   children: [
+    //     { field: 'name' },
+    //     { field: 'country' },
+    //   ],
+    // },
     { field: "date", pinned: 'right' },
-    { field: "electric" },
-    { field: "electric" },
-    { field: "electric" },
-    { field: "electric" },
     { field: "electric" },
     { field: "electric" },
     { field: "electric" },
@@ -43,7 +46,7 @@ export class AgGridComponent {
   ];
 
   pinnedTopRowData: any[] = [
-    { make: "Toyota", model: "Corolla", price: 29600, electric: false },
+    // { make: "Toyota", model: "Corolla", price: 29600, electric: false },
   ];
 
   pinnedBottomRowData: any[] = [

@@ -1,13 +1,16 @@
 export interface ColDef {
-    field: string
+    field?: string
+    headerName?: string
+    parentHeader?: string
+    children?: ProcessedColumn[]
     pinned?: 'left' | 'right'
+    sortable?: boolean
 }
 
 export interface ProcessedColumn extends ColDef {
     index: number
-    width: number
-    position: number
-    sortable?: boolean
+    layoutStyles?: Record<string, string | number>
+    styles?: Record<string, string | number>
 }
 
 export type SortDirection = 'asc' | 'desc' | null;
