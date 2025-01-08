@@ -95,6 +95,7 @@
     position: absolute;
     width: 100%;
     border-bottom: 1px solid #ccc;
+    transition: .3s ease;
 }
 
 .inn-table-cell {
@@ -105,3 +106,11 @@
     padding-inline: 1rem;
 }
 
+.sort-icon-wrapper {
+    padding-left: 6px;
+}
+
+.sort-icon {
+    width: 14px;
+    height: 14px;
+}

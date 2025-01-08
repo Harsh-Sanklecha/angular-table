@@ -44,15 +44,23 @@
 <ng-template #headerTemplate let-header="header" let-index="index" let-align="align">
     <div class="inn-table-header-cell" [innColumnResize]="header" (columnWidthChange)="onColumnWidthChange($event, index, align, header)"
         [ngStyle]="getCombinedHeaderStyles(header)" (click)="onHeaderClick($event, header)">
-        <div class="label text-truncate-1">
-            {{ header.field }}
+        <span class="label text-truncate-1">{{ header.field }}</span>
+        @if (currentSortColumn === header) {
+        <div class="sort-icon-wrapper">
+            @if (currentSortDirection == 'asc') {
+                <img src="icons/sort-arrow-up.svg" class="sort-icon" />
+            }
+            @if (currentSortDirection == 'desc') {
+                <img src="icons/sort-arrow-down.svg" class="sort-icon" />
+            }
         </div>
+        }
     </div>
 </ng-template>
 
 <ng-template #bodyTemplate let-columns="columns">
     @for (row of rowData; track $index; let i=$index) {
-    <div class="inn-table-row" [style.height.px]="rowHeight" [style.transform]="'translateY(' + (i * rowHeight) + 'px)'">
+    <div class="inn-table-row" [style.height.px]="rowHeight" [style.transform]="'translateY(' + row.styles.translateY + 'px)'">
         @for (column of columns; track j; let j = $index) {
         <div class="inn-table-cell" [ngStyle]="column.layoutStyles">
             <div class="label text-truncate-1">

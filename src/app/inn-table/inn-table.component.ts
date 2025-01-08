@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, model, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { ColDef, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
@@ -32,8 +32,8 @@ export class InnTable implements OnChanges {
   _centerColumns: ProcessedColumn[] = []
   _rightPinnedColumns: ProcessedColumn[] = []
 
-  private currentSortColumn: ProcessedColumn | null = null;
-  private currentSortDirection: SortDirection = null;
+  currentSortColumn: ProcessedColumn | null = null;
+  currentSortDirection: SortDirection = null;
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
@@ -44,11 +44,11 @@ export class InnTable implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['columnDefs'] || changes['data']) {
       this.hasHeader = this.columnDefs.some(colDef => colDef.children?.length);
-      this._initializeTable();
+      this.#initializeTable();
     }
   }
 
-  private _initializeTable() {
+  #initializeTable() {
     this._leftPinnedColumns = []
     this._centerColumns = []
     this._rightPinnedColumns = []
@@ -112,6 +112,12 @@ export class InnTable implements OnChanges {
         }
       }
     }
+
+    this.#initializeRowData()
+  }
+
+  #initializeRowData() {
+    this.rowData = this.rowData.map((data, index) => ({ ...data, id: index, styles: { translateY: index * this.rowHeight } }));
   }
 
   onColumnWidthChange(width: number, index: number, align: 'left' | 'center' | 'right', header: ProcessedColumn) {
@@ -203,15 +209,20 @@ export class InnTable implements OnChanges {
   }
 
   private sortData() {
-    if (!this.currentSortColumn || !this.currentSortDirection) {
+    if (!this.currentSortColumn) {
+      return;
+    }
+
+    if (!this.currentSortDirection) {
       // Reset to original data if no sorting
+      this.rowData = this.rowData.map(data => ({ ...data, styles: { translateY: data.id * this.rowHeight } }));
       return;
     }
 
     const field = this.currentSortColumn.field;
     const direction = this.currentSortDirection;
 
-    this.rowData = [...this.rowData].sort((a, b) => {
+    const sortedData = structuredClone(this.rowData).sort((a, b) => {
       const valueA = a[field ?? ''];
       const valueB = b[field ?? ''];
 
@@ -222,6 +233,11 @@ export class InnTable implements OnChanges {
         ? (valueA > valueB ? 1 : -1)
         : (valueA < valueB ? 1 : -1);
     });
+
+    const translateYMapping = new Map<number, number>();
+    sortedData.forEach((data, index) => translateYMapping.set(data.id, index * this.rowHeight));
+
+    this.rowData = this.rowData.map(data => ({ ...data, styles: { translateY: translateYMapping.get(data.id) } }));
   }
 
   getCombinedHeaderStyles(column: ProcessedColumn) {
