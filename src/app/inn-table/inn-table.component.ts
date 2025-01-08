@@ -147,7 +147,15 @@ export class InnTable implements OnChanges {
       (column[i].layoutStyles as { [key: string]: any })['left'] = +(lastColumn?.['left']?.replace('px', '') ?? 0) + +(lastColumn?.['width']?.replace('px', '') || 0) + 'px';
 
       if (column[i].parentHeader) {
-        // TODO: Move Grouped Header
+        const groupColumn = this._centerColumnGroup.find(col => col.headerName === column[i].parentHeader);
+        const firstChild = this._centerColumns.find(col => col.parentHeader === column[i].parentHeader);
+
+        if (groupColumn && firstChild) {      
+          groupColumn.styles = {
+            ...groupColumn.styles,
+            left: firstChild.layoutStyles?.['left'] as string
+          }
+        }
       }
     }
 
