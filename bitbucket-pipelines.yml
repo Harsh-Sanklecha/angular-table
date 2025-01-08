@@ -1,0 +1,30 @@
+image: node:20
+
+pipelines:
+  custom:
+    deploy(❌UnitTests):
+      - step:
+          name: Deploy Without Unit Testing
+          caches:
+            - node
+          size: "2x"
+          script:
+            - echo 'creating build archive'
+            - echo $BITBUCKET_BRANCH
+            - cd $BITBUCKET_CLONE_DIR
+            - npm install --legacy-peer-deps
+            - npm run build
+            - cd dist
+            - tar -zcf dist inn-library/
+            - pipe: atlassian/scp-deploy:0.3.4
+              variables:
+                USER: "ubuntu"
+                SERVER: $Server
+                REMOTE_PATH: "/opt"
+                LOCAL_PATH: "dist"
+            - pipe: atlassian/ssh-run:0.1.4
+              variables:
+                SSH_USER: "ubuntu"
+                SERVER: $Server
+                MODE: "command"
+                COMMAND: "cd /opt/inn-library/dist;rm -rf inn-library;tar -xf /opt/dist -C ./"
