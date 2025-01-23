@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, model, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, model, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
 import { ColDef, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
-import { NgStyle, NgTemplateOutlet } from '@angular/common';
+import { JsonPipe, NgStyle, NgTemplateOutlet } from '@angular/common';
 
 @Component({
   selector: 'app-inn-table',
@@ -21,7 +21,7 @@ export class InnTable implements OnChanges {
   @Input() columnWidth: number = 200;
 
   @ViewChild('headerContainer') headerContainer!: ElementRef<HTMLDivElement>;
-  @ViewChild('bodyContainer') bodyContainer!: ElementRef<HTMLDivElement>;
+  @ViewChildren('bodyContainer') bodyContainers!: ElementRef<HTMLDivElement>[];
 
   leftPinnedWidth: number = 0;
   rightPinnedWidth: number = 0;
@@ -117,7 +117,44 @@ export class InnTable implements OnChanges {
   }
 
   #initializeRowData() {
-    this.rowData = this.rowData.map((data, index) => ({ ...data, id: index, styles: { translateY: index * this.rowHeight } }));
+    this.rowData = this.#transformRowCells(this.rowData)
+    this.pinnedTopRowData = this.#transformRowCells(this.pinnedTopRowData)
+  }
+
+  #transformRowCells(rows: any[]) {
+    return rows.map((data, index) => {
+      const transformedData = { ...data }
+
+      Object.keys(transformedData).forEach(key => {
+        const colDef = this.columnDefs.find(col => col.field === key);
+        if (!colDef) return;
+
+        let value = transformedData[key];
+
+        // Apply valueGetter if defined
+        if (colDef.valueGetter) {
+          if (typeof colDef.valueGetter !== 'function') {
+            throw new Error('valueGetter should be a function');
+          }
+          value = colDef.valueGetter({ colDef, data: transformedData });
+        }
+
+        // Apply valueFormatter if defined
+        if (colDef.valueFormatter) {
+          if (typeof colDef.valueFormatter !== 'function') {
+            throw new Error('valueFormatter should be a function');
+          }
+          value = colDef.valueFormatter({ value });
+        }
+
+        transformedData[key] = value
+      })
+      return { 
+        ...transformedData, 
+        id: index, 
+        styles: { translateY: index * this.rowHeight } 
+      }
+    });
   }
 
   onColumnWidthChange(width: number, index: number, align: 'left' | 'center' | 'right', header: ProcessedColumn) {
@@ -189,7 +226,7 @@ export class InnTable implements OnChanges {
 
   headerScrolled($event: Event) {
     const target = $event.target as HTMLDivElement;
-    this.bodyContainer.nativeElement.scrollLeft = target.scrollLeft
+    this.bodyContainers.forEach(bodyContainer => bodyContainer.nativeElement.scrollLeft = target.scrollLeft);
   }
 
   bodyScrolled($event: Event) {

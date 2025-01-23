@@ -26,17 +26,11 @@
         </div>
     </div>
 
-    <div class="inn-floating-top"></div>
+    <div class="inn-floating-top">
+        <ng-container *ngTemplateOutlet="bodyWrapper; context: { rowData: pinnedTopRowData }"></ng-container>
+    </div>
     <div class="inn-table-body">
-        <div class="inn-pinned-left-cols-container" [style.width.px]="leftPinnedWidth">
-            <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _leftPinnedColumns }"></ng-container>
-        </div>
-        <div class="inn-center-cols-container" #bodyContainer (scroll)="bodyScrolled($event)">
-            <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _centerColumns }"></ng-container>
-        </div>
-        <div class="inn-pinned-right-cols-container" [style.width.px]="rightPinnedWidth">
-            <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _rightPinnedColumns }"></ng-container>
-        </div>
+        <ng-container *ngTemplateOutlet="bodyWrapper; context: { rowData: rowData }"></ng-container>
     </div>
     <div class="inn-floating-bottom"></div>
 </div>
@@ -58,8 +52,23 @@
     </div>
 </ng-template>
 
-<ng-template #bodyTemplate let-columns="columns">
-    @for (row of rowData; track $index; let i=$index) {
+<ng-template #bodyWrapper let-rowData="rowData">
+    <div class="inn-pinned-left-cols-container" [style.width.px]="leftPinnedWidth">
+        <ng-container
+            *ngTemplateOutlet="bodyTemplate; context: { columns: _leftPinnedColumns, data: rowData }"></ng-container>
+    </div>
+    <div class="inn-center-cols-container" #bodyContainer [style.height.px]="rowHeight * rowData.length"
+        (scroll)="bodyScrolled($event)">
+        <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _centerColumns, data: rowData }"></ng-container>
+    </div>
+    <div class="inn-pinned-right-cols-container" [style.width.px]="rightPinnedWidth">
+        <ng-container
+            *ngTemplateOutlet="bodyTemplate; context: { columns: _rightPinnedColumns, data: rowData }"></ng-container>
+    </div>
+</ng-template>
+
+<ng-template #bodyTemplate let-columns="columns" let-data="data">
+    @for (row of data; track $index; let i=$index) {
     <div class="inn-table-row" [style.height.px]="rowHeight" [style.transform]="'translateY(' + row.styles.translateY + 'px)'">
         @for (column of columns; track j; let j = $index) {
         <div class="inn-table-cell" [ngStyle]="column.layoutStyles">

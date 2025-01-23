@@ -1,6 +1,12 @@
 .inn-table {
-    height: 20vh;
+    height: 300px;
     box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .inn-table-header {
@@ -68,8 +74,9 @@
 
 .inn-table-body {
     position: relative;
-    height: 100%;
     display: flex;
+    flex: 1;
+    overflow-y: scroll;
 }
 
 .inn-pinned-left-cols-container,
@@ -89,6 +96,7 @@
 .inn-center-cols-container {
     flex: 1 1 auto;
     overflow-x: auto;
+    scrollbar-width: none !important;
 }
 
 .inn-table-row {
@@ -113,4 +121,9 @@
 .sort-icon {
     width: 14px;
     height: 14px;
+}
+
+.inn-floating-top {
+    position: relative;
+    display: flex;
 }
