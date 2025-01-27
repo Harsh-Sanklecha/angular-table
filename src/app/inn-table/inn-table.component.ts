@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, model, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
 import { ColDef, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
 import { JsonPipe, NgStyle, NgTemplateOutlet } from '@angular/common';
+import { InnTableCellComponent } from './components/inn-table-cell/inn-table-cell.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-inn-table',
-  imports: [ColumnResizeDirective, NgTemplateOutlet, NgStyle],
+  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, NgStyle, FormsModule],
   templateUrl: './inn-table.component.html',
   styleUrl: './inn-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -20,8 +22,17 @@ export class InnTable implements OnChanges {
   @Input() rowHeight: number = 48;
   @Input() columnWidth: number = 200;
 
+  @Input() currentPage: number = 1;
+  @Input() itemsPerPage: number = 10;
+  
+  @ViewChild('dynamicCellContainer') dynamicCellContainer!: ElementRef<HTMLDivElement>;
+
   @ViewChild('headerContainer') headerContainer!: ElementRef<HTMLDivElement>;
   @ViewChildren('bodyContainer') bodyContainers!: ElementRef<HTMLDivElement>[];
+
+  filteredData: any[] = []
+
+  searchTerm!: string
 
   leftPinnedWidth: number = 0;
   rightPinnedWidth: number = 0;
@@ -35,16 +46,25 @@ export class InnTable implements OnChanges {
   currentSortColumn: ProcessedColumn | null = null;
   currentSortDirection: SortDirection = null;
 
+  itemsPerPageOptions = [10, 20, 50, 100];
+
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
   ) { }
 
   private hasHeader: boolean = false
 
+  get totalPages() {
+    return Math.ceil(this.filteredData.length / this.itemsPerPage);
+  }
+
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['columnDefs'] || changes['data']) {
+    if (changes['columnDefs'] || changes['rowData']) {
       this.hasHeader = this.columnDefs.some(colDef => colDef.children?.length);
+      this.filteredData = structuredClone(this.rowData);
+
       this.#initializeTable();
+
     }
   }
 
@@ -117,7 +137,7 @@ export class InnTable implements OnChanges {
   }
 
   #initializeRowData() {
-    this.rowData = this.#transformRowCells(this.rowData)
+    this.filteredData = this.#transformRowCells(this.filteredData)
     this.pinnedTopRowData = this.#transformRowCells(this.pinnedTopRowData)
   }
 
@@ -155,6 +175,10 @@ export class InnTable implements OnChanges {
         styles: { translateY: index * this.rowHeight } 
       }
     });
+  }
+
+  #createDynamicComponent() {
+    
   }
 
   onColumnWidthChange(width: number, index: number, align: 'left' | 'center' | 'right', header: ProcessedColumn) {
@@ -260,14 +284,14 @@ export class InnTable implements OnChanges {
 
     if (!this.currentSortDirection) {
       // Reset to original data if no sorting
-      this.rowData = this.rowData.map(data => ({ ...data, styles: { translateY: data.id * this.rowHeight } }));
+      this.filteredData = this.filteredData.map(data => ({ ...data, styles: { translateY: data.id * this.rowHeight } }));
       return;
     }
 
     const field = this.currentSortColumn.field;
     const direction = this.currentSortDirection;
 
-    const sortedData = structuredClone(this.rowData).sort((a, b) => {
+    const sortedData = structuredClone(this.filteredData).sort((a, b) => {
       const valueA = a[field ?? ''];
       const valueB = b[field ?? ''];
 
@@ -282,7 +306,7 @@ export class InnTable implements OnChanges {
     const translateYMapping = new Map<number, number>();
     sortedData.forEach((data, index) => translateYMapping.set(data.id, index * this.rowHeight));
 
-    this.rowData = this.rowData.map(data => ({ ...data, styles: { translateY: translateYMapping.get(data.id) } }));
+    this.filteredData = this.filteredData.map(data => ({ ...data, styles: { translateY: translateYMapping.get(data.id) } }));
   }
 
   getCombinedHeaderStyles(column: ProcessedColumn) {
@@ -291,5 +315,38 @@ export class InnTable implements OnChanges {
       ...column.styles
     }
   }
+
+  searchTextChanged() {
+    if (!this.searchTerm) {
+      this.filteredData = structuredClone(this.rowData)
+    }else { 
+      this.filteredData = structuredClone(this.rowData).filter(item =>
+        Object.values(item).some(value =>
+          value != null && value.toString().toLowerCase().includes(this.searchTerm.toLowerCase())
+        )
+      )
+    }
+
+    this.currentPage = 1
+    this.#initializeRowData()
+  }
+
+  get paginatedData() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.filteredData.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+
+  changePage(newPage: number) {
+    if (newPage >= 1 && newPage <= this.totalPages) {
+      this.currentPage = newPage;
+    }
+  }
+
+  changeItemsPerPage(event: Event) {
+    this.itemsPerPage = Number((event.target as HTMLSelectElement).value);
+    this.currentPage = 1;
+  }
+
 
 }

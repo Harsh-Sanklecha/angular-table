@@ -1,4 +1,4 @@
-type CellData = string
+export type CellData = string
 
 export interface ValueGetter {
     colDef: ColDef

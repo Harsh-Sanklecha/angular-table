@@ -1,3 +1,4 @@
+<input type="text" [(ngModel)]="searchTerm" (ngModelChange)="searchTextChanged()" placeholder="Filter...">
 <div class="inn-table">
     <div class="inn-table-header">
         <div class="inn-pinned-left-header" [style.width.px]="leftPinnedWidth">
@@ -30,9 +31,21 @@
         <ng-container *ngTemplateOutlet="bodyWrapper; context: { rowData: pinnedTopRowData }"></ng-container>
     </div>
     <div class="inn-table-body">
-        <ng-container *ngTemplateOutlet="bodyWrapper; context: { rowData: rowData }"></ng-container>
+        <ng-container *ngTemplateOutlet="bodyWrapper; context: { rowData: paginatedData }"></ng-container>
     </div>
     <div class="inn-floating-bottom"></div>
+    <div class="inn-pagination-panel">
+        <label for="itemsPerPage">Page Size:</label>
+        <select id="itemsPerPage" (change)="changeItemsPerPage($event)">
+            @for (option of itemsPerPageOptions; track $index) {
+                <option [value]="option">{{ option }}</option>
+            }
+        </select>
+
+        <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+        <span>{{ currentPage }} / {{ totalPages }}</span>
+        <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+    </div>
 </div>
 
 <ng-template #headerTemplate let-header="header" let-index="index" let-align="align">
@@ -70,6 +83,7 @@
 <ng-template #bodyTemplate let-columns="columns" let-data="data">
     @for (row of data; track $index; let i=$index) {
     <div class="inn-table-row" [style.height.px]="rowHeight" [style.transform]="'translateY(' + row.styles.translateY + 'px)'">
+        <ng-container #dynamicCellContainer></ng-container>
         @for (column of columns; track j; let j = $index) {
         <div class="inn-table-cell" [ngStyle]="column.layoutStyles">
             <div class="label text-truncate-1">
