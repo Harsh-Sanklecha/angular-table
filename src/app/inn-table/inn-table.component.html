@@ -103,7 +103,10 @@
 
 <ng-template #bodyTemplate let-columns="columns" let-data="data">
     @for (row of data; track $index; let i=$index) {
-    <div class="inn-table-row" [style.height.px]="rowHeight" [style.transform]="'translateY(' + row.styles.translateY + 'px)'">
+    <div class="inn-table-row" [attr.data-index]="i" 
+        (mouseenter)="onRowMouseEntered(row)" (mouseleave)="onRowMouseLeave(row)"
+        [style.height.px]="rowHeight" [style.transform]="'translateY(' + row.styles.translateY + 'px)'"
+        [class.inn-table-row-hovered]="row.hovered">
         <ng-container #dynamicCellContainer></ng-container>
         @for (column of columns; track j; let j = $index) {
         <div class="inn-table-cell" [ngStyle]="column.layoutStyles">

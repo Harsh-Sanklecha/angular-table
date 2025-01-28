@@ -18,7 +18,7 @@ export class AgGridComponent {
 
   // Column Definitions: Defines the columns to be displayed.
   colDefs: any[] = [
-    { field: "make", pinned: 'left'},
+    { field: "make", pinned: 'left', rowDrag: true },
     { field: "model" },
     { field: "price", cellRenderer: 'agAnimateShowChangeCellRenderer' },
     {
@@ -35,8 +35,8 @@ export class AgGridComponent {
         { field: 'country' },
       ],
     },
-    { field: "date", pinned: 'left' },
-    { field: "electric", pinned: 'left' },
+    { field: "date" },
+    { field: "electric" },
     { field: "electric" },
     { field: "electric" },
   ];

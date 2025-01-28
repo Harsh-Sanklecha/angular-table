@@ -10,7 +10,8 @@
     margin-bottom: 4px;
     gap: 8px;
 
-    .primary-btn {
+    .primary-btn,
+    .outline-btn {
         height: 36px;
     }
 
@@ -151,6 +152,10 @@
     width: 100%;
     border-bottom: 1px solid #ccc;
     transition: .3s ease;
+}
+
+.inn-table-row-hovered {
+    background-color: var(--mod-background-neutal-hover);
 }
 
 .inn-table-cell {

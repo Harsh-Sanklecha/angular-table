@@ -27,3 +27,7 @@ export interface ProcessedColumn extends ColDef {
 }
 
 export type SortDirection = 'asc' | 'desc' | null;
+
+export interface IRowSelection {
+    mode: 'singleRow' | 'multiRow'
+}

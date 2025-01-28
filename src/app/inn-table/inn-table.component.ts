@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
-import { ColDef, ProcessedColumn, SortDirection } from './inn-table.type';
+import { ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
 import { JsonPipe, NgStyle, NgTemplateOutlet } from '@angular/common';
 import { InnTableCellComponent } from './components/inn-table-cell/inn-table-cell.component';
@@ -22,8 +22,10 @@ export class InnTable implements OnChanges {
   @Input() rowHeight: number = 48;
   @Input() columnWidth: number = 200;
 
+  @Input() rowSelection!: IRowSelection
+
   @Input() currentPage: number = 1;
-  @Input() itemsPerPage: number = 10;
+  @Input() itemsPerPage: number = 20;
   @Input() totalItems: number = 0;
   
   @ViewChild('dynamicCellContainer') dynamicCellContainer!: ElementRef<HTMLDivElement>;
@@ -47,7 +49,7 @@ export class InnTable implements OnChanges {
   currentSortColumn: ProcessedColumn | null = null;
   currentSortDirection: SortDirection = null;
 
-  itemsPerPageOptions = [10, 20, 50, 100];
+  itemsPerPageOptions = [20, 50, 100];
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
@@ -141,7 +143,6 @@ export class InnTable implements OnChanges {
   }
 
   #initializeRowData() {
-    this.filteredData = this.#transformRowCells(this.filteredData)
     this.pinnedTopRowData = this.#transformRowCells(this.pinnedTopRowData)
 
     if (!this.totalItems) {
@@ -339,11 +340,19 @@ export class InnTable implements OnChanges {
     this.#initializeRowData()
   }
 
-  get paginatedData() {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return this.filteredData.slice(startIndex, startIndex + this.itemsPerPage);
+  onRowMouseEntered(row: any) {
+    row.hovered = true;
   }
 
+  onRowMouseLeave(row: any) {
+    row.hovered = false
+  }
+
+  get paginatedData() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const data = this.filteredData.slice(startIndex, startIndex + this.itemsPerPage);
+    return this.#transformRowCells(data)
+  }
 
   changePage(newPage: number) {
     if (newPage >= 1 && newPage <= this.totalPages) {
