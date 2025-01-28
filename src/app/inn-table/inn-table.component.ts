@@ -24,6 +24,7 @@ export class InnTable implements OnChanges {
 
   @Input() currentPage: number = 1;
   @Input() itemsPerPage: number = 10;
+  @Input() totalItems: number = 0;
   
   @ViewChild('dynamicCellContainer') dynamicCellContainer!: ElementRef<HTMLDivElement>;
 
@@ -58,13 +59,16 @@ export class InnTable implements OnChanges {
     return Math.ceil(this.filteredData.length / this.itemsPerPage);
   }
 
+  get currentItemsCount() {
+    return Math.min((this.itemsPerPage * this.currentPage), this.totalItems)
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes['columnDefs'] || changes['rowData']) {
       this.hasHeader = this.columnDefs.some(colDef => colDef.children?.length);
       this.filteredData = structuredClone(this.rowData);
 
       this.#initializeTable();
-
     }
   }
 
@@ -139,6 +143,10 @@ export class InnTable implements OnChanges {
   #initializeRowData() {
     this.filteredData = this.#transformRowCells(this.filteredData)
     this.pinnedTopRowData = this.#transformRowCells(this.pinnedTopRowData)
+
+    if (!this.totalItems) {
+      this.totalItems = this.filteredData.length;
+    }
   }
 
   #transformRowCells(rows: any[]) {

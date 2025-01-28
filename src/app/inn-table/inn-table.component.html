@@ -1,4 +1,18 @@
-<input type="text" [(ngModel)]="searchTerm" (ngModelChange)="searchTextChanged()" placeholder="Filter...">
+<div class="inn-table-options">
+    <button class="primary-btn">
+        <img src="icons/add.svg" />
+        Add
+    </button>
+    <div class="search-input-wrapper">
+        <img src="icons/search.svg" />
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="searchTextChanged()" placeholder="Search">
+    </div>
+    <div class="mx-auto"></div>
+    <button class="outline-btn"><img src="icons/filter.svg" /></button>
+    <button class="outline-btn"><img src="icons/arrow-upload.svg" /></button>
+    <button class="outline-btn"><img src="icons/arrow-download.svg" /></button>
+    <button class="outline-btn"><img src="icons/settings.svg" /></button>
+</div>
 <div class="inn-table">
     <div class="inn-table-header">
         <div class="inn-pinned-left-header" [style.width.px]="leftPinnedWidth">
@@ -34,18 +48,25 @@
         <ng-container *ngTemplateOutlet="bodyWrapper; context: { rowData: paginatedData }"></ng-container>
     </div>
     <div class="inn-floating-bottom"></div>
-    <div class="inn-pagination-panel">
-        <label for="itemsPerPage">Page Size:</label>
-        <select id="itemsPerPage" (change)="changeItemsPerPage($event)">
-            @for (option of itemsPerPageOptions; track $index) {
-                <option [value]="option">{{ option }}</option>
-            }
-        </select>
-
-        <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
-        <span>{{ currentPage }} / {{ totalPages }}</span>
-        <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
-    </div>
+</div>
+<div class="inn-pagination-panel">
+    <span><b>Showing: </b>{{currentItemsCount}} of {{totalItems}}</span>
+    <div class="mx-auto"></div>
+    <select class="items-per-page" (change)="changeItemsPerPage($event)">
+        @for (option of itemsPerPageOptions; track $index) {
+            <option [value]="option">{{ option }}</option>
+        }
+    </select>
+    <span class="secondary-text">rows / page</span>
+    <button class="previous" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
+        <img src="icons/chevron-left.svg" class="icon" />
+        Previous
+    </button>
+    <!-- <span>{{ currentPage }} / {{ totalPages }}</span> -->
+    <button class="next" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
+        Next
+        <img src="icons/chevron-right.svg" class="icon" />
+    </button>
 </div>
 
 <ng-template #headerTemplate let-header="header" let-index="index" let-align="align">

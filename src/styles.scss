@@ -4,8 +4,39 @@
 /* Quartz Theme Specific CSS */
 @import 'ag-grid-community/styles/ag-theme-quartz.css';
 
+:root {
+    // Border
+    --borderWidth-thin: 1px;
+    --borderWidth-thicker: 2px;
+    --borderRadius-medium: 4px;
+
+    // Spacing
+    --spacing-2: 4px;
+    --spacing-3: 8px;
+    --spacing-4: 12px;
+
+    // Colors
+    --mod-background-neutal-default: #FFF;
+
+    // Brand Colors
+    --mod-background-brand-default: #52BBA9;
+    --mod-background-brand-spotlight: #47A191;
+    --mod-border-brand-transparent: rgba(64, 146, 132, 0.32);
+    
+    --mod-border-gray-normal: #D2D8E3;
+    --mod-background-neutal-hover: #F4F5F8;
+    --mod-background-neutal-transparentSpotlight: #707b9117;
+    --mod-background-neutal-focused: #E9ECF1;
+    --stag-text-gray-muted: #7B88A0;
+    --stage-border-gray-subtle: #D2D8E3;
+}
+
 * {
     box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter';
 }
 
 .text-truncate {
@@ -18,4 +49,52 @@
 .text-truncate-1 {
     @extend .text-truncate;
     -webkit-line-clamp: 1;
+}
+
+.base-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-2, 4px);
+    border-radius: var(--borderRadius-medium, 4px);
+    padding: var(--spacing-3, 8px) var(--spacing-4, 12px);
+    cursor: pointer;
+    font-weight: 600;
+    transition: .3s ease;
+    height: 40px;
+}
+
+.primary-btn {
+    @extend .base-btn;
+    width: 120px;
+    background: var(--mod-background-brand-default, #52BBA9);
+    border: none;
+
+    &:hover {
+        background: var(--mod-background-brand-spotlight, #47A191);
+    }
+
+    &:active {
+        background: var(--mod-background-brand-spotlight, #47A191);
+        box-shadow: 1px 1px 4px 0px #0F5D4F inset;
+    }
+}
+
+.outline-btn {
+    @extend .base-btn;
+    border: 1px solid var(--mod-border-gray-normal, #D2D8E3);
+    background: var(--mod-background-neutal-default, #FFF);
+
+    &:hover {
+        background: var(--mod-background-neutal-hover, #F4F5F8);
+    }
+
+    &:active {
+        background: var(--mod-background-neutal-transparentSpotlight, rgba(112, 123, 145, 0.09));
+        box-shadow: 1px 1px 4px 0px rgba(13, 46, 91, 0.50) inset;
+    }
+}
+
+.mx-auto {
+    margin-inline: auto;
 }
