@@ -107,13 +107,8 @@
         (mouseenter)="onRowMouseEntered(row)" (mouseleave)="onRowMouseLeave(row)"
         [style.height.px]="rowHeight" [style.transform]="'translateY(' + row.styles.translateY + 'px)'"
         [class.inn-table-row-hovered]="row.hovered">
-        <ng-container #dynamicCellContainer></ng-container>
         @for (column of columns; track j; let j = $index) {
-        <div class="inn-table-cell" [ngStyle]="column.layoutStyles">
-            <div class="label text-truncate-1">
-                {{ row[column.field] }}
-            </div>
-        </div>
+            <inn-table-cell class="inn-table-cell" [ngStyle]="column.layoutStyles" [value]="row[column.field]" [params]="row.params" />
         }
     </div>
     }

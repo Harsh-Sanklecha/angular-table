@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
-import { ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren, ViewContainerRef } from '@angular/core';
+import { CELL_DATA_TYPE, ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
 import { JsonPipe, NgStyle, NgTemplateOutlet } from '@angular/common';
 import { InnTableCellComponent } from './components/inn-table-cell/inn-table-cell.component';
 import { FormsModule } from '@angular/forms';
+import { InnTableService } from './inn-table.service';
 
 @Component({
   selector: 'app-inn-table',
@@ -13,6 +14,8 @@ import { FormsModule } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InnTable implements OnChanges {
+  @Input() rowModelType: 'clientSide' | 'serverSide' = 'clientSide';
+
   @Input() columnDefs: ColDef[] = [];
   @Input() rowData: any[] = [];
 
@@ -28,7 +31,6 @@ export class InnTable implements OnChanges {
   @Input() itemsPerPage: number = 20;
   @Input() totalItems: number = 0;
   
-  @ViewChild('dynamicCellContainer') dynamicCellContainer!: ElementRef<HTMLDivElement>;
 
   @ViewChild('headerContainer') headerContainer!: ElementRef<HTMLDivElement>;
   @ViewChildren('bodyContainer') bodyContainers!: ElementRef<HTMLDivElement>[];
@@ -53,6 +55,7 @@ export class InnTable implements OnChanges {
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
+    private innTableService: InnTableService
   ) { }
 
   private hasHeader: boolean = false
@@ -68,6 +71,7 @@ export class InnTable implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['columnDefs'] || changes['rowData']) {
       this.hasHeader = this.columnDefs.some(colDef => colDef.children?.length);
+      this.rowData = this.rowData.map((each, index) => ({ ...each, id: index }))
       this.filteredData = structuredClone(this.rowData);
 
       this.#initializeTable();
@@ -143,6 +147,7 @@ export class InnTable implements OnChanges {
   }
 
   #initializeRowData() {
+    this.filteredData = this.#transformRowCells(this.filteredData)
     this.pinnedTopRowData = this.#transformRowCells(this.pinnedTopRowData)
 
     if (!this.totalItems) {
@@ -153,6 +158,7 @@ export class InnTable implements OnChanges {
   #transformRowCells(rows: any[]) {
     return rows.map((data, index) => {
       const transformedData = { ...data }
+      let params: any = { ediable: true }
 
       Object.keys(transformedData).forEach(key => {
         const colDef = this.columnDefs.find(col => col.field === key);
@@ -177,13 +183,23 @@ export class InnTable implements OnChanges {
         }
 
         transformedData[key] = value
+        params.dataType = colDef.dataType
+
+        // Apply cellRenderer if defined
+        if(colDef.cellRenderer) {
+          params.dataType = CELL_DATA_TYPE.COMPONENT
+          params.component = colDef.cellRenderer
+        }
+
       })
       return { 
-        ...transformedData, 
-        id: index, 
+        ...transformedData,
+        params: params,
         styles: { translateY: index * this.rowHeight } 
       }
     });
+
+    
   }
 
   #createDynamicComponent() {
@@ -291,6 +307,12 @@ export class InnTable implements OnChanges {
       return;
     }
 
+    // Server Side Sorting
+    if(this.rowModelType === 'serverSide') {
+      this.innTableService.sortColumn$.next(this.currentSortDirection);
+      return
+    }
+
     if (!this.currentSortDirection) {
       // Reset to original data if no sorting
       this.filteredData = this.filteredData.map(data => ({ ...data, styles: { translateY: data.id * this.rowHeight } }));
@@ -300,7 +322,7 @@ export class InnTable implements OnChanges {
     const field = this.currentSortColumn.field;
     const direction = this.currentSortDirection;
 
-    const sortedData = structuredClone(this.filteredData).sort((a, b) => {
+    const sortedData = structuredClone(this.rowData).sort((a, b) => {
       const valueA = a[field ?? ''];
       const valueB = b[field ?? ''];
 
@@ -315,7 +337,7 @@ export class InnTable implements OnChanges {
     const translateYMapping = new Map<number, number>();
     sortedData.forEach((data, index) => translateYMapping.set(data.id, index * this.rowHeight));
 
-    this.filteredData = this.filteredData.map(data => ({ ...data, styles: { translateY: translateYMapping.get(data.id) } }));
+    this.filteredData = this.rowData.map(data => ({ ...data, styles: { translateY: translateYMapping.get(data.id) } }));
   }
 
   getCombinedHeaderStyles(column: ProcessedColumn) {
@@ -326,6 +348,13 @@ export class InnTable implements OnChanges {
   }
 
   searchTextChanged() {
+    // Server Side Filtering
+    if(this.rowModelType === 'serverSide') {
+      this.innTableService.searchText$.next(this.searchTerm);
+      return
+    }
+
+
     if (!this.searchTerm) {
       this.filteredData = structuredClone(this.rowData)
     }else { 
@@ -357,6 +386,7 @@ export class InnTable implements OnChanges {
   changePage(newPage: number) {
     if (newPage >= 1 && newPage <= this.totalPages) {
       this.currentPage = newPage;
+      this.innTableService.pagination$.next(this.currentPage);
     }
   }
 

@@ -1,3 +1,5 @@
+import { Component } from "@angular/core"
+
 export type CellData = string
 
 export interface ValueGetter {
@@ -16,8 +18,10 @@ export interface ColDef {
     children?: ProcessedColumn[]
     pinned?: 'left' | 'right'
     sortable?: boolean
+    dataType?: CELL_DATA_TYPE
     valueGetter?: (param: ValueGetter) => CellData
     valueFormatter?: (param: ValueFormatter<CellData>) => CellData
+    cellRenderer?: any
 }
 
 export interface ProcessedColumn extends ColDef {
@@ -30,4 +34,18 @@ export type SortDirection = 'asc' | 'desc' | null;
 
 export interface IRowSelection {
     mode: 'singleRow' | 'multiRow'
+}
+
+export enum CELL_DATA_TYPE {
+    STRING = 'string',
+    NUMBER = 'number',
+    DATE = 'date',
+    BOOLEAN = 'boolean',
+    COMPONENT = 'component'
+}
+
+export interface ICellParams {
+    editable: boolean
+    dataType: CELL_DATA_TYPE
+    component?: Component
 }
