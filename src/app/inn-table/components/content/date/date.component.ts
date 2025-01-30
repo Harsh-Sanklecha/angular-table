@@ -1,18 +1,54 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { InnTableService } from '../../../inn-table.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'inn-date',
-  imports: [],
+  imports: [FormsModule],
   template: `
-    {{value}}
+     @if (editable) {
+      <input type="date" [(ngModel)]="value" (blur)="onBlur()">
+    }@else {
+      <span> {{value}}</span>
+    }
   `,
-  styles: ``
+  styles: `
+  :host {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    input {
+      width: 100%;
+      height: 100%;
+      border: 1px solid transparent;
+      background-color: transparent;
+    }`
 })
 export class DateComponent implements OnInit {
   @Input() value: any;
 
+  @Input()
+  editable = false;
+
+  @Output() valueChange = new EventEmitter<string>();
+
   ngOnInit(): void {
-    this.value = new Date(this.value).toLocaleDateString('en-US');
+    if (this.value) {
+      const date = new Date(this.value);
+      this.value = date.toISOString().split('T')[0]; // Formats to 'YYYY-MM-DD'
+    }
+  }
+
+
+  constructor(
+    private innTableService: InnTableService
+  ) { }
+
+  onBlur() {
+    this.innTableService.cellValueChanged$.next(this.value);
   }
 
 }

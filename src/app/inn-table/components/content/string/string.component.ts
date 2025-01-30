@@ -1,7 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { OverflowTooltipDirective } from '../../../directives/overflow-tooltip/overflow-tooltip.directive';
 import { FormsModule } from '@angular/forms';
+import { InnTableService } from '../../../inn-table.service';
 
 
 @Component({
@@ -9,8 +10,11 @@ import { FormsModule } from '@angular/forms';
   selector: 'inn-string-content',
   imports: [MatTooltipModule, OverflowTooltipDirective, FormsModule],
   template: `
-    <!-- <span> {{value}}</span> -->
-    <input type="text" [(ngModel)]="value" (blur)="onBlur()">
+    @if (editable) {
+      <input type="text" [(ngModel)]="value" (blur)="onBlur()">
+    }@else {
+      <span> {{value}}</span>
+    }
   `,
   styles: `
     :host {
@@ -31,7 +35,17 @@ import { FormsModule } from '@angular/forms';
 export class StringComponent {
   @Input() value: any;
 
+  @Input()
+  editable = false;
+
+  @Output() valueChange = new EventEmitter<string>();
+
+  constructor(
+    private innTableService: InnTableService
+  ) { }
+
   onBlur() {
+    this.innTableService.cellValueChanged$.next(this.value);
   }
 
 }

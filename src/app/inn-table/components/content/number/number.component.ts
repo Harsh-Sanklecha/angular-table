@@ -1,14 +1,48 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { InnTableService } from '../../../inn-table.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   standalone: true,
   selector: 'inn-number',
-  imports: [],
+  imports: [FormsModule],
   template: `
-   {{value}}
+   @if (editable) {
+      <input type="number" [(ngModel)]="value" (blur)="onBlur()">
+    }@else {
+      <span> {{value}}</span>
+    }
   `,
-  styles: ``
+  styles: `
+  :host {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    input {
+      width: 100%;
+      height: 100%;
+      border: 1px solid transparent;
+      background-color: transparent;
+    }
+  `
 })
 export class NumberComponent {
-   @Input() value!: number;
+  @Input() value!: number;
+
+  @Input()
+  editable = false;
+
+  @Output() valueChange = new EventEmitter<string>();
+
+  constructor(
+    private innTableService: InnTableService
+  ) { }
+
+  onBlur() {
+    this.innTableService.cellValueChanged$.next(this.value);
+  }
+
 }

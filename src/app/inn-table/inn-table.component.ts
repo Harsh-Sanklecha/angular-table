@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren, ViewContainerRef } from '@angular/core';
 import { CELL_DATA_TYPE, ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
-import { JsonPipe, NgStyle, NgTemplateOutlet } from '@angular/common';
+import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { InnTableCellComponent } from './components/inn-table-cell/inn-table-cell.component';
 import { FormsModule } from '@angular/forms';
 import { InnTableService } from './inn-table.service';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-inn-table',
-  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, NgStyle, FormsModule],
+  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, NgStyle, FormsModule, MatMenuModule],
   templateUrl: './inn-table.component.html',
   styleUrl: './inn-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -158,7 +159,7 @@ export class InnTable implements OnChanges {
   #transformRowCells(rows: any[]) {
     return rows.map((data, index) => {
       const transformedData = { ...data }
-      let params: any = { ediable: true }
+      let params: any = { data }
 
       Object.keys(transformedData).forEach(key => {
         const colDef = this.columnDefs.find(col => col.field === key);
@@ -184,6 +185,7 @@ export class InnTable implements OnChanges {
 
         transformedData[key] = value
         params.dataType = colDef.dataType
+        params.editable = !!colDef.editable
 
         // Apply cellRenderer if defined
         if(colDef.cellRenderer) {
@@ -202,39 +204,35 @@ export class InnTable implements OnChanges {
     
   }
 
-  #createDynamicComponent() {
-    
-  }
-
   onColumnWidthChange(width: number, index: number, align: 'left' | 'center' | 'right', header: ProcessedColumn) {
     if (header.children?.length) {
       this.onGroupedColumnWidthChange(width, index, header);
       return;
     }
 
-    let column: ProcessedColumn[] = [];
+    let columns: ProcessedColumn[] = [];
     switch (align) {
       case 'left':
-        column = this._leftPinnedColumns;
-        this.leftPinnedWidth = column.reduce((acc, curr) => acc + +((curr.styles?.['width'] as string)?.replace('px', '') ?? 0), 0);
+        columns = this._leftPinnedColumns;
+        this.leftPinnedWidth = columns.reduce((acc, curr) => acc + +((curr.layoutStyles?.['width'] as string)?.replace('px', '') ?? 0), 0);
         break;
       case 'center':
-        column = this._centerColumns;
+        columns = this._centerColumns;
         break;
       case 'right':
-        column = this._rightPinnedColumns;
-        this.rightPinnedWidth = column.reduce((acc, curr) => acc + +((curr.styles?.['width'] as string)?.replace('px', '') ?? 0), 0);
+        columns = this._rightPinnedColumns;
+        this.rightPinnedWidth = columns.reduce((acc, curr) => acc + +((curr.layoutStyles?.['width'] as string)?.replace('px', '') ?? 0), 0);
         break;
     }
-    (column[index].layoutStyles as { [key: string]: any })['width'] = width + 'px';
+    (columns[index].layoutStyles as { [key: string]: any })['width'] = width + 'px';
 
-    for (let i = index + 1; i < column.length; i++) {
-      const lastColumn = column[i - 1].layoutStyles as { [key: string]: any }
-      (column[i].layoutStyles as { [key: string]: any })['left'] = +(lastColumn?.['left']?.replace('px', '') ?? 0) + +(lastColumn?.['width']?.replace('px', '') || 0) + 'px';
+    for (let i = index + 1; i < columns.length; i++) {
+      const lastColumn = columns[i - 1].layoutStyles as { [key: string]: any }
+      (columns[i].layoutStyles as { [key: string]: any })['left'] = +(lastColumn?.['left']?.replace('px', '') ?? 0) + +(lastColumn?.['width']?.replace('px', '') || 0) + 'px';
 
-      if (column[i].parentHeader) {
-        const groupColumn = this._centerColumnGroup.find(col => col.headerName === column[i].parentHeader);
-        const firstChild = this._centerColumns.find(col => col.parentHeader === column[i].parentHeader);
+      if (columns[i].parentHeader) {
+        const groupColumn = this._centerColumnGroup.find(col => col.headerName === columns[i].parentHeader);
+        const firstChild = this._centerColumns.find(col => col.parentHeader === columns[i].parentHeader);
 
         if (groupColumn && firstChild) {      
           groupColumn.styles = {
@@ -299,6 +297,13 @@ export class InnTable implements OnChanges {
     }
 
     // Sort the data
+    this.sortData();
+  }
+
+  sortColumn(column: ProcessedColumn, direction: SortDirection) {
+    this.currentSortColumn = column;
+    this.currentSortDirection = direction;
+
     this.sortData();
   }
 

@@ -5,15 +5,16 @@ import { StringComponent } from '../content/string/string.component';
 import { NumberComponent } from '../content/number/number.component';
 import { CheckboxComponent } from '../content/checkbox/checkbox.component';
 import { DateComponent } from '../content/date/date.component';
-import { OverflowTooltipDirective } from '../../directives/overflow-tooltip/overflow-tooltip.directive';
 
 interface CellComponent {
   value: any;
+  editable: boolean;
 }
+
 @Component({
   standalone: true,
   selector: 'inn-table-cell',
-  imports: [FormsModule, OverflowTooltipDirective],
+  imports: [FormsModule],
   template: `
     <ng-container #cellContainer></ng-container>
   `,
@@ -59,6 +60,7 @@ export class InnTableCellComponent implements AfterViewInit {
       this.container.clear();
       const componentRef = this.container.createComponent(component)
       componentRef.instance.value = this.value;
+      componentRef.instance.editable = this.params.editable;
     }
   }
 

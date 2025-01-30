@@ -19,6 +19,7 @@ export interface ColDef {
     pinned?: 'left' | 'right'
     sortable?: boolean
     dataType?: CELL_DATA_TYPE
+    editable?: boolean
     valueGetter?: (param: ValueGetter) => CellData
     valueFormatter?: (param: ValueFormatter<CellData>) => CellData
     cellRenderer?: any
@@ -45,6 +46,7 @@ export enum CELL_DATA_TYPE {
 }
 
 export interface ICellParams {
+    data: any
     editable: boolean
     dataType: CELL_DATA_TYPE
     component?: Component

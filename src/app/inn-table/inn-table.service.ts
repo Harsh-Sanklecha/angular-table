@@ -8,6 +8,8 @@ export class InnTableService {
     sortColumn$ = new Subject<SortDirection>();
     pagination$ = new Subject<number>();
 
+    cellValueChanged$ = new Subject<any>()
+
     constructor() { }
     
 }

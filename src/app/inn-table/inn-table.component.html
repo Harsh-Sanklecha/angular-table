@@ -83,6 +83,32 @@
             }
         </div>
         }
+
+        <div class="mx-auto"></div>
+        <div class="menu">
+            <div [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
+                <img src="icons/more-vert.svg" class="sort-icon" />
+            </div>
+            <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="sortColumn(header, 'asc')">
+                    <img src="icons/sort-arrow-up.svg" class="menu-icon" />
+                    <span>Sort Ascending</span>
+                </button>
+                <button mat-menu-item (click)="sortColumn(header, 'desc')">
+                    <img src="icons/sort-arrow-down.svg" class="menu-icon" />
+                    <span>Sort Desceding</span>
+                </button>
+                <button mat-menu-item [matMenuTriggerFor]="pinColumns">
+                    <img src="icons/pin-outline.svg" class="menu-icon" />
+                    <span>Pin Columns</span>
+                </button>
+                <mat-menu #pinColumns="matMenu">
+                    <button mat-menu-item>No Pin</button>
+                    <button mat-menu-item>Left Pin</button>
+                    <button mat-menu-item>Right Pin</button>
+                </mat-menu>
+            </mat-menu>
+        </div>
     </div>
 </ng-template>
 
