@@ -6,7 +6,7 @@ import { InnTableService } from '../../../inn-table.service';
   selector: 'inn-checkbox',
   imports: [FormsModule],
   template: `
-  <input type="checkbox" [(ngModel)]="value" (ngModelChange)="valueChange.emit($event)" [disabled]="!editable">
+  <input type="checkbox" [(ngModel)]="value" (ngModelChange)="valueChange.emit($event)" [disabled]="!metaData?.editable">
   `,
   styles: `
     :host {
@@ -21,7 +21,7 @@ export class CheckboxComponent {
   @Input() value: boolean = false;
 
   @Input()
-  editable = false;
+  metaData!: { editable: boolean };
 
   @Output() valueChange = new EventEmitter<string>();
 

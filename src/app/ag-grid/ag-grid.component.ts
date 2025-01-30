@@ -2,10 +2,11 @@ import { Component } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { InnTable } from '../inn-table/inn-table.component';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { HeaderComponent } from '../inn-table/components/header/header.component';
 
 @Component({
   selector: 'app-ag-grid',
-  imports: [AgGridAngular, InnTable],
+  imports: [AgGridAngular, InnTable, HeaderComponent],
   templateUrl: './ag-grid.component.html',
   styleUrl: './ag-grid.component.scss'
 })
@@ -19,6 +20,7 @@ export class AgGridComponent {
   // Column Definitions: Defines the columns to be displayed.
   colDefs: any[] = [
     { field: "make", pinned: 'left', rowDrag: true },
+    { field: "customComponent", cellRenderer: HeaderComponent },
     { field: "model", editable: true },
     { field: "price" },
     {

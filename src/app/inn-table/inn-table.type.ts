@@ -47,7 +47,4 @@ export enum CELL_DATA_TYPE {
 
 export interface ICellParams {
     data: any
-    editable: boolean
-    dataType: CELL_DATA_TYPE
-    component?: Component
 }

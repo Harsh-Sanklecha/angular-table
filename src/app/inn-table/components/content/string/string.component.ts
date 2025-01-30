@@ -10,8 +10,8 @@ import { InnTableService } from '../../../inn-table.service';
   selector: 'inn-string-content',
   imports: [MatTooltipModule, OverflowTooltipDirective, FormsModule],
   template: `
-    @if (editable) {
-      <input type="text" [(ngModel)]="value" (blur)="onBlur()">
+    @if (metaData?.editable) {
+      <input type="text" [(ngModel)]="value" (blur)="valueChanged()">
     }@else {
       <span> {{value}}</span>
     }
@@ -36,7 +36,7 @@ export class StringComponent {
   @Input() value: any;
 
   @Input()
-  editable = false;
+  metaData!: { editable: boolean };
 
   @Output() valueChange = new EventEmitter<string>();
 
@@ -44,7 +44,7 @@ export class StringComponent {
     private innTableService: InnTableService
   ) { }
 
-  onBlur() {
+  valueChanged() {
     this.innTableService.cellValueChanged$.next(this.value);
   }
 

@@ -103,9 +103,9 @@
                     <span>Pin Columns</span>
                 </button>
                 <mat-menu #pinColumns="matMenu">
-                    <button mat-menu-item>No Pin</button>
-                    <button mat-menu-item>Left Pin</button>
-                    <button mat-menu-item>Right Pin</button>
+                    <button mat-menu-item [disabled]="align === 'center'">No Pin</button>
+                    <button mat-menu-item [disabled]="align === 'left'">Left Pin</button>
+                    <button mat-menu-item [disabled]="align === 'right'">Right Pin</button>
                 </mat-menu>
             </mat-menu>
         </div>
@@ -134,7 +134,7 @@
         [style.height.px]="rowHeight" [style.transform]="'translateY(' + row.styles.translateY + 'px)'"
         [class.inn-table-row-hovered]="row.hovered">
         @for (column of columns; track j; let j = $index) {
-            <inn-table-cell class="inn-table-cell" [ngStyle]="column.layoutStyles" [value]="row[column.field]" [params]="row.params" />
+            <inn-table-cell class="inn-table-cell" [ngStyle]="column.layoutStyles" [value]="row[column.field]" [rowData]="row" [colDef]="column" />
         }
     </div>
     }

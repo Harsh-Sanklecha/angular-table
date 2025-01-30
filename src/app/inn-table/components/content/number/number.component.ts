@@ -7,8 +7,8 @@ import { FormsModule } from '@angular/forms';
   selector: 'inn-number',
   imports: [FormsModule],
   template: `
-   @if (editable) {
-      <input type="number" [(ngModel)]="value" (blur)="onBlur()">
+   @if (metaData?.editable) {
+      <input type="number" [(ngModel)]="value" (blur)="valueChanged()">
     }@else {
       <span> {{value}}</span>
     }
@@ -33,7 +33,7 @@ export class NumberComponent {
   @Input() value!: number;
 
   @Input()
-  editable = false;
+  metaData!: { editable: boolean };
 
   @Output() valueChange = new EventEmitter<string>();
 
@@ -41,7 +41,7 @@ export class NumberComponent {
     private innTableService: InnTableService
   ) { }
 
-  onBlur() {
+  valueChanged() {
     this.innTableService.cellValueChanged$.next(this.value);
   }
 

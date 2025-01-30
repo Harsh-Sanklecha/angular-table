@@ -148,60 +148,19 @@ export class InnTable implements OnChanges {
   }
 
   #initializeRowData() {
-    this.filteredData = this.#transformRowCells(this.filteredData)
-    this.pinnedTopRowData = this.#transformRowCells(this.pinnedTopRowData)
+    this.filteredData = this.#transformRows(this.filteredData)
+    this.pinnedTopRowData = this.#transformRows(this.pinnedTopRowData)
 
     if (!this.totalItems) {
       this.totalItems = this.filteredData.length;
     }
   }
 
-  #transformRowCells(rows: any[]) {
-    return rows.map((data, index) => {
-      const transformedData = { ...data }
-      let params: any = { data }
-
-      Object.keys(transformedData).forEach(key => {
-        const colDef = this.columnDefs.find(col => col.field === key);
-        if (!colDef) return;
-
-        let value = transformedData[key];
-
-        // Apply valueGetter if defined
-        if (colDef.valueGetter) {
-          if (typeof colDef.valueGetter !== 'function') {
-            throw new Error('valueGetter should be a function');
-          }
-          value = colDef.valueGetter({ colDef, data: transformedData });
-        }
-
-        // Apply valueFormatter if defined
-        if (colDef.valueFormatter) {
-          if (typeof colDef.valueFormatter !== 'function') {
-            throw new Error('valueFormatter should be a function');
-          }
-          value = colDef.valueFormatter({ value });
-        }
-
-        transformedData[key] = value
-        params.dataType = colDef.dataType
-        params.editable = !!colDef.editable
-
-        // Apply cellRenderer if defined
-        if(colDef.cellRenderer) {
-          params.dataType = CELL_DATA_TYPE.COMPONENT
-          params.component = colDef.cellRenderer
-        }
-
-      })
-      return { 
-        ...transformedData,
-        params: params,
-        styles: { translateY: index * this.rowHeight } 
-      }
-    });
-
-    
+  #transformRows(rows: any[]) {
+    return rows.map((data, index) => ({
+      ...data,
+      styles: { translateY: index * this.rowHeight }
+    }))
   }
 
   onColumnWidthChange(width: number, index: number, align: 'left' | 'center' | 'right', header: ProcessedColumn) {
@@ -385,7 +344,7 @@ export class InnTable implements OnChanges {
   get paginatedData() {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const data = this.filteredData.slice(startIndex, startIndex + this.itemsPerPage);
-    return this.#transformRowCells(data)
+    return this.#transformRows(data)
   }
 
   changePage(newPage: number) {

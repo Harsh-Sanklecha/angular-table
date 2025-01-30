@@ -6,8 +6,8 @@ import { FormsModule } from '@angular/forms';
   selector: 'inn-date',
   imports: [FormsModule],
   template: `
-     @if (editable) {
-      <input type="date" [(ngModel)]="value" (blur)="onBlur()">
+     @if (metaData?.editable) {
+      <input type="date" [(ngModel)]="value" (blur)="valueChanged()">
     }@else {
       <span> {{value}}</span>
     }
@@ -31,7 +31,7 @@ export class DateComponent implements OnInit {
   @Input() value: any;
 
   @Input()
-  editable = false;
+  metaData!: { editable: boolean };
 
   @Output() valueChange = new EventEmitter<string>();
 
@@ -47,7 +47,7 @@ export class DateComponent implements OnInit {
     private innTableService: InnTableService
   ) { }
 
-  onBlur() {
+  valueChanged() {
     this.innTableService.cellValueChanged$.next(this.value);
   }
 
