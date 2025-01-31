@@ -45,6 +45,12 @@ export enum CELL_DATA_TYPE {
     COMPONENT = 'component'
 }
 
-export interface ICellParams {
+export interface ICellRendererParams {
+    value: any
     data: any
+    colDef: ColDef
+}
+
+export interface ICellRendererComp {
+    innInit?(params: ICellRendererParams): void
 }

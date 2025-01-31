@@ -1,12 +1,12 @@
 import { AfterViewInit, Component, Input, Type, ViewChild, ViewContainerRef } from '@angular/core';
-import { CELL_DATA_TYPE, ColDef, ICellParams } from '../../inn-table.type';
+import { CELL_DATA_TYPE, ColDef, ICellRendererComp } from '../../inn-table.type';
 import { FormsModule } from '@angular/forms';
 import { StringComponent } from '../content/string/string.component';
 import { NumberComponent } from '../content/number/number.component';
 import { CheckboxComponent } from '../content/checkbox/checkbox.component';
 import { DateComponent } from '../content/date/date.component';
 
-interface CellComponent {
+interface CellComponent extends ICellRendererComp {
   value: any;
   metaData: {
     editable: boolean;
@@ -109,6 +109,11 @@ export class InnTableCellComponent implements AfterViewInit {
       const componentRef = this.container.createComponent(component)
       componentRef.instance.value = this.value;
       componentRef.instance.metaData = metaData;
+
+      // Initialize with params via innInit
+      if (componentRef.instance.innInit) {
+        componentRef.instance.innInit({ value: this.value, data: this.rowData, colDef: this.colDef });
+      }
     }
   }
 

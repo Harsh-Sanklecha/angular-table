@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
-import { ICellRendererParams } from 'ag-grid-community';
+import { ICellRendererComp, ICellRendererParams } from '../../inn-table.type';
 
 @Component({
   selector: 'app-header',
@@ -8,15 +8,11 @@ import { ICellRendererParams } from 'ag-grid-community';
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
-export class HeaderComponent implements ICellRendererAngularComp {
+export class HeaderComponent implements ICellRendererComp {
   params: any;
 
-  agInit(params: ICellRendererParams): void {
-    this.params = params;
-  }
-
-  refresh(params: ICellRendererParams): boolean {
-    return true;
+  innInit(params: ICellRendererParams): void {
+    console.log(params)
   }
 
 }

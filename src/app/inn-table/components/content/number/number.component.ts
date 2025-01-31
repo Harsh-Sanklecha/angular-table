@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'inn-number',
   imports: [FormsModule],
   template: `
-   @if (metaData?.editable) {
+   @if (metaData.editable) {
       <input type="number" [(ngModel)]="value" (blur)="valueChanged()">
     }@else {
       <span> {{value}}</span>
