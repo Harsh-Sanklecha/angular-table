@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, Type, ViewChild, ViewContainerRef } from '@angular/core';
+import { AfterViewInit, Component, Input, OnChanges, SimpleChanges, Type, ViewChild, ViewContainerRef } from '@angular/core';
 import { CELL_DATA_TYPE, ColDef, ICellRendererComp } from '../../inn-table.type';
 import { FormsModule } from '@angular/forms';
 import { StringComponent } from '../content/string/string.component';
@@ -30,7 +30,7 @@ interface CellComponent extends ICellRendererComp {
     }
   `
 })
-export class InnTableCellComponent implements AfterViewInit {
+export class InnTableCellComponent implements AfterViewInit, OnChanges {
   @ViewChild('cellContainer', { read: ViewContainerRef })
   container!: ViewContainerRef;
 
@@ -42,6 +42,10 @@ export class InnTableCellComponent implements AfterViewInit {
 
   @Input()
   colDef!: ColDef
+
+  ngOnChanges(changes: SimpleChanges) {
+    this.#transformCellValue()
+  }
 
   ngAfterViewInit(): void {
     this.#transformCellValue()

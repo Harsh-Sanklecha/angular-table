@@ -62,7 +62,7 @@ export class InnTable implements OnChanges {
   private hasHeader: boolean = false
 
   get totalPages() {
-    return Math.ceil(this.filteredData.length / this.itemsPerPage);
+    return Math.ceil(this.rowData.length / this.itemsPerPage);
   }
 
   get currentItemsCount() {
@@ -73,7 +73,7 @@ export class InnTable implements OnChanges {
     if (changes['columnDefs'] || changes['rowData']) {
       this.hasHeader = this.columnDefs.some(colDef => colDef.children?.length);
       this.rowData = this.rowData.map((each, index) => ({ ...each, id: index }))
-      this.filteredData = structuredClone(this.rowData);
+      this.filteredData = this.paginatedData()
 
       this.#initializeTable();
     }
@@ -152,7 +152,7 @@ export class InnTable implements OnChanges {
     this.pinnedTopRowData = this.#transformRows(this.pinnedTopRowData)
 
     if (!this.totalItems) {
-      this.totalItems = this.filteredData.length;
+      this.totalItems = this.rowData.length;
     }
   }
 
@@ -318,7 +318,6 @@ export class InnTable implements OnChanges {
       return
     }
 
-
     if (!this.searchTerm) {
       this.filteredData = structuredClone(this.rowData)
     }else { 
@@ -341,15 +340,16 @@ export class InnTable implements OnChanges {
     row.hovered = false
   }
 
-  get paginatedData() {
+  paginatedData() {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const data = this.filteredData.slice(startIndex, startIndex + this.itemsPerPage);
+    const data = this.rowData.slice(startIndex, startIndex + this.itemsPerPage);
     return this.#transformRows(data)
   }
 
   changePage(newPage: number) {
     if (newPage >= 1 && newPage <= this.totalPages) {
       this.currentPage = newPage;
+      this.filteredData = this.paginatedData()
       this.innTableService.pagination$.next(this.currentPage);
     }
   }
