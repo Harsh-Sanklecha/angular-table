@@ -85,7 +85,7 @@ export class InnTable implements OnChanges {
       .replace(/^./, match => match.toUpperCase()); // Capitalize first letter
   }
   
-  #hasParentHeader() {
+  get hasGroupedHeaders() {
     return this.columnDefs.some(colDef => colDef.children?.length);
   }
 
@@ -105,22 +105,44 @@ export class InnTable implements OnChanges {
       })
     }
 
+    const pinnedPositions = ['left', 'center', 'right'];
     for(let i = 0; i< this.columnDefs.length; i++) {
       const colDef = this.columnDefs[i];
+      colDef.formattedName = this.#convertCamelToTitleCase(colDef.field ?? '');
 
-      // if the column has children, group them
+      // if the column has children then add group 
       if (colDef.children?.length) {
-        groupedColumns.push({
-          cellType: 'grouped',
-          index: i,
-          field: colDef.headerName, 
-          children: colDef.children,
-          layoutStyles: { width: this.columnWidth * colDef.children.length, height: this.rowHeight, top: 0 },
-          ...colDef
+        colDef.formattedName = this.#convertCamelToTitleCase(colDef.headerName ?? '');
+
+        const pinnedChildrenMap = {
+          left: colDef.children.filter(child => child.pinned === 'left'),
+          right: colDef.children.filter(child => child.pinned === 'right'),
+          center: colDef.children.filter(child => !child.pinned)
+        }
+
+        pinnedPositions.forEach(pinned => {
+          const children = pinned === 'center' ? pinnedChildrenMap.center : (pinnedChildrenMap as any)[pinned];
+
+          if (children.length) {
+            groupedColumns.push({
+              ...colDef,
+              cellType: 'grouped',
+              index: i,
+              field: colDef.headerName,
+              children: colDef.children,
+              pinned: pinned !== 'center' ? pinned : undefined,
+              layoutStyles: {
+                width: this.columnWidth * children.length,
+                height: this.rowHeight,
+                top: 0
+              }
+            });
+          }
         })
+
+
         this.columnDefs.splice(i + 1, 0, ...colDef.children.map(each => ({ ...each, parentHeader: colDef.headerName })))
       } else {
-
         if (!colDef.parentHeader) {
           groupedColumns.push({
             ...colDef,
@@ -130,11 +152,15 @@ export class InnTable implements OnChanges {
             layoutStyles: { width: this.columnWidth, top: 0, height: 0 }
           })
         }
+
+        let height = colDef.parentHeader ? this.rowHeight : 2 * this.rowHeight;
+        if (!this.hasGroupedHeaders) height = this.rowHeight;
+
         formattedColumns.push({
           ...colDef,
           cellType: 'data',
           index: i,
-          layoutStyles: { width: this.columnWidth, top: colDef.parentHeader ? this.rowHeight : 0, height: colDef.parentHeader ? this.rowHeight : 2 * this.rowHeight }
+          layoutStyles: { width: this.columnWidth, top: colDef.parentHeader ? this.rowHeight : 0, height }
         })
       }
     }
@@ -218,36 +244,43 @@ export class InnTable implements OnChanges {
     }))
   }
 
-  onColumnWidthChange(width: number, index: number, align: 'left' | 'center' | 'right', header: ProcessedColumn) {
+  onColumnWidthChange(width: number, index: number, header: ProcessedColumn) {
     if (header.children?.length) {
       this.onGroupedColumnWidthChange(width, header);
       return;
     }
 
     let columns: ProcessedColumn[] = [];
-    switch (align) {
+    let groupedColumns: ProcessedColumn[] = [];
+    switch (header.pinned) {
       case 'left':
         columns = this._leftPinnedColumns;
-        this.leftPinnedWidth = columns.reduce((acc, curr) => acc + +(curr.layoutStyles?.['width'] ?? 0), 0);
-        break;
-      case 'center':
-        columns = this._centerColumns;
+        groupedColumns = this._leftColumnGroup;
+        this.leftPinnedWidth = columns.reduce((acc, curr) => acc + (curr.layoutStyles?.['width'] ?? 0), 0);
         break;
       case 'right':
         columns = this._rightPinnedColumns;
-        this.rightPinnedWidth = columns.reduce((acc, curr) => acc + +(curr.layoutStyles?.['width'] ?? 0), 0);
+        groupedColumns = this._rightColumnGroup;
+        this.rightPinnedWidth = columns.reduce((acc, curr) => acc + (curr.layoutStyles?.['width'] ?? 0), 0);
         break;
+      default:
+        columns = this._centerColumns;
+        groupedColumns = this._centerColumnGroup;
+        this.centerWidth = columns.reduce((acc, curr) => acc + (curr.layoutStyles?.['width'] ?? 0), 0);
     }
-    (columns[index].layoutStyles as { [key: string]: any })['width'] = width
+
+    if(!columns.length) return;
+
+    columns[index].layoutStyles!['width'] = width
 
     // Iteratively update the left position of the next columns
     for (let i = index + 1; i < columns.length; i++) {
       const lastColumn = columns[i - 1].layoutStyles as { [key: string]: number }
-      (columns[i].layoutStyles as { [key: string]: number })['left'] = +(lastColumn?.['left'] ?? 0) + +(lastColumn?.['width']|| 0)
+      (columns[i].layoutStyles)!['left'] = lastColumn['left'] + lastColumn['width']
 
       if (columns[i].parentHeader) {
-        const groupColumn = this._centerColumnGroup.find(col => col.headerName === columns[i].parentHeader);
-        const firstChild = this._centerColumns.find(col => col.parentHeader === columns[i].parentHeader);
+        const groupColumn = groupedColumns.find(col => col.headerName === columns[i].parentHeader);
+        const firstChild = columns.find(col => col.parentHeader === columns[i].parentHeader);
 
         if (groupColumn && firstChild) {
           groupColumn.layoutStyles!['left'] = firstChild.layoutStyles?.['left'] ?? 0
@@ -255,18 +288,18 @@ export class InnTable implements OnChanges {
       }
     }
 
-    // Update the width of the group column
+    // Update the width of the group columnx
     if(header.parentHeader) {
-      const groupColumnIndex = this._centerColumnGroup.findIndex(col => col.headerName === header.parentHeader);
-      const groupColumn = this._centerColumnGroup[groupColumnIndex];
-      const children = this._centerColumns.filter(col => col.parentHeader === header.parentHeader);
+      const groupColumnIndex = groupedColumns.findIndex(col => col.headerName === header.parentHeader);
+      const groupColumn = groupedColumns[groupColumnIndex];
+      const children = columns.filter(col => col.parentHeader === header.parentHeader);
 
       // Update the width of the group column by calculating the sum of the children
       groupColumn.layoutStyles!['width'] = children?.reduce((acc, curr) => acc + +(curr.layoutStyles?.['width'] ?? 0), 0)
 
-      for (let i = groupColumnIndex + 1; i < this._centerColumnGroup.length; i++) {
-        const lastColumn = this._centerColumnGroup[i - 1].layoutStyles as { [key: string]: number }
-        this._centerColumnGroup[i].layoutStyles!['left'] = +(lastColumn?.['left'] ?? 0) + +(lastColumn?.['width'] || 0);
+      for (let i = groupColumnIndex + 1; i < groupedColumns.length; i++) {
+        const lastColumn = groupedColumns[i - 1].layoutStyles as { [key: string]: number }
+        groupedColumns[i].layoutStyles!['left'] = lastColumn?.['left'] + lastColumn?.['width']
       }
     }
   }
@@ -276,7 +309,7 @@ export class InnTable implements OnChanges {
 
     for(const child of children) {
       const childIndex = this._centerColumns.findIndex(col => col === child);
-      this.onColumnWidthChange(width / 2, childIndex, 'center', child);
+      this.onColumnWidthChange(width / 2, childIndex, child);
     }
   }
 

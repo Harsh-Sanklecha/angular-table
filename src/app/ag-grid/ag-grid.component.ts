@@ -26,7 +26,7 @@ export class AgGridComponent {
     {
       headerName: 'Power & Country',
       children: [
-        { field: 'horsePower' },
+        { field: 'horsePower', pinned: 'left' },
         { field: 'country' },
       ],
     },
@@ -75,7 +75,7 @@ export class AgGridComponent {
   ];
 
   pinnedTopRowData: any[] = [
-    { make: "BMW", model: "3 Series", price: 45000, date: new Date(), electric: false, horsePower: 255, country: 'Germany' },
+    { make: "BMW", model: "3 Series", price: 45000, date: new Date(), electric: false, horsePower: 255, country: 'Germany', name: 'India' },
     { make: "Audi", model: "e-tron", price: 65900, date: new Date(), electric: true, horsePower: 355, country: 'Germany' }
   ];
 

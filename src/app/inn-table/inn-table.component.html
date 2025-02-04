@@ -17,32 +17,15 @@
 <div class="inn-table">
     <div class="inn-table-header">
         <div class="inn-pinned-left-header" [style.width.px]="leftPinnedWidth">
-            @for (header of _leftPinnedColumns; track $index) {
-            <ng-container
-                *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'left' }"></ng-container>
-            }
+            <ng-container *ngTemplateOutlet="headerWrapper; context: { groupedColumns: _leftColumnGroup, columns: _leftPinnedColumns, align: 'left' }"></ng-container>
         </div>
         <div class="inn-header-viewport" #headerContainer (scroll)="headerScrolled($event)">
-            <div class="inn-header-container">
-                <div class="inn-header-group" [style.height.px]="rowHeight">
-                    @for (header of _centerColumnGroup; track $index) {
-                    <ng-container
-                        *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'center' }"></ng-container>
-                    }
-                </div>
-                <div class="inn-header-row" [style.height.px]="rowHeight">
-                    @for (header of _centerColumns; track $index) {
-                    <ng-container
-                        *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'center' }"></ng-container>
-                    }
-                </div>
-            </div>
+            <ng-container
+                *ngTemplateOutlet="headerWrapper; context: { groupedColumns: _centerColumnGroup, columns: _centerColumns, align: 'center' }"></ng-container>
         </div>
         <div class="inn-pinned-right-header" [style.width.px]="rightPinnedWidth">
-            @for (header of _rightPinnedColumns; track $index) {
             <ng-container
-                *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'right' }"></ng-container>
-            }
+                *ngTemplateOutlet="headerWrapper; context: { groupedColumns: _rightColumnGroup, columns: _rightPinnedColumns, align: 'right' }"></ng-container>
         </div>
     </div>
 
@@ -72,17 +55,39 @@
     </button>
 </div>
 
-<ng-template #headerTemplate let-header="header" let-index="index" let-align="align">
+<!-- #region Header Template -->
+ <ng-template #headerWrapper let-groupedColumns="groupedColumns" let-columns="columns" let-align="align">
+    <div class="inn-header-container">
+        <div class="inn-header-group" [style.height.px]="rowHeight">
+            @if(hasGroupedHeaders) {
+            <div class="inn-header-group" [style.height.px]="rowHeight">
+                @for (header of groupedColumns; track $index) {
+                <ng-container
+                    *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: align }"></ng-container>
+                }
+            </div>
+            }
+        </div>
+        <div class="inn-header-row" [style.height.px]="rowHeight">
+            @for (header of columns; track $index) {
+            <ng-container
+                *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: align }"></ng-container>
+            }
+        </div>
+    </div>
+ </ng-template>
 
+<ng-template #headerTemplate let-header="header" let-index="index" let-align="align">
     @if (header.layoutStyles) {
     <div class="inn-table-header-cell" [innColumnResize]="header"
-        (columnWidthChange)="onColumnWidthChange($event, index, align, header)"
         [style.height.px]="header.layoutStyles.height" 
         [style.top.px]="header.layoutStyles.top" 
         [style.width.px]="header.layoutStyles.width"
         [style.left.px]="header.layoutStyles.left" 
-        (click)="onHeaderClick($event, header)">
-        <span class="label text-truncate-1">{{ header.field }}</span>
+        (click)="onHeaderClick($event, header)"
+        (columnWidthChange)="onColumnWidthChange($event, index, header)"
+        >
+        <span class="label text-truncate-1">{{ header.formattedName }}</span>
         @if (currentSortColumn === header) {
         <div class="sort-icon-wrapper">
             @if (currentSortDirection == 'asc') {
@@ -121,9 +126,10 @@
         </div>
     </div>
     }
-
 </ng-template>
+<!-- #endregion -->
 
+<!-- #region Body Wrapper Template -->
 <ng-template #bodyWrapper let-rowData="rowData">
     <div class="inn-pinned-left-cols-container" [style.width.px]="leftPinnedWidth">
         <ng-container
@@ -142,20 +148,24 @@
 
 <ng-template #bodyTemplate let-columns="columns" let-data="data">
     @for (row of data; track $index; let i=$index) {
-    <div class="inn-table-row" [attr.data-index]="i" 
+    <div class="inn-table-row" 
         (mouseenter)="onRowMouseEntered(row)"
-        (mouseleave)="onRowMouseLeave(row)" [style.height.px]="rowHeight"
+        (mouseleave)="onRowMouseLeave(row)"
+        [attr.data-index]="i"
+        [style.height.px]="rowHeight"
         [style.transform]="'translateY(' + row.styles.translateY + 'px)'" 
         [class.inn-table-row-hovered]="row.hovered"
-        >
+    >
         @for (column of columns; track j; let j = $index) {
         <inn-table-cell class="inn-table-cell"
             [style.width.px]="column.layoutStyles.width"
             [style.left.px]="column.layoutStyles.left" 
             [value]="row[column.field]"
             [rowData]="row" 
-            [colDef]="column" />
+            [colDef]="column" 
+        />
         }
     </div>
     }
 </ng-template>
+<!-- #endregion -->
