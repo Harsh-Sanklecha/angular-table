@@ -305,11 +305,22 @@ export class InnTable implements OnChanges {
   }
 
   onGroupedColumnWidthChange(width: number, header: ProcessedColumn) {
-    const children = this._centerColumns.filter(col => col.parentHeader === header.headerName)
+    let columns: ProcessedColumn[] = [];
+    switch (header.pinned) {
+      case 'left':
+        columns = this._leftPinnedColumns;
+        break;
+      case 'right':
+        columns = this._rightPinnedColumns
+        break;
+      default:
+        columns = this._centerColumns
+    }
+    const children = columns.filter(col => col.parentHeader === header.headerName)
 
     for(const child of children) {
-      const childIndex = this._centerColumns.findIndex(col => col === child);
-      this.onColumnWidthChange(width / 2, childIndex, child);
+      const childIndex = columns.findIndex(col => col === child);
+      this.onColumnWidthChange(width / children.length, childIndex, child);
     }
   }
 
