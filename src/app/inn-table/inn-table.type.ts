@@ -11,8 +11,18 @@ export interface ValueFormatter<T> {
     value: T
 }
 
+interface BaseColumn {
+    field?: CellData
+    headerName?: string
+    pinned?: 'left' | 'right'
+    sortable?: boolean
+    dataType?: CELL_DATA_TYPE
+    editable?: boolean
+}
+
 export interface ColDef {
     field?: CellData
+    formattedName?: string
     headerName?: string
     parentHeader?: string
     children?: ProcessedColumn[]
@@ -26,9 +36,9 @@ export interface ColDef {
 }
 
 export interface ProcessedColumn extends ColDef {
+    cellType: 'grouped' | 'data' | 'actions'
     index: number
-    layoutStyles?: Record<string, string | number>
-    styles?: Record<string, string | number>
+    layoutStyles?: Record<string, number>
 }
 
 export type SortDirection = 'asc' | 'desc' | null;

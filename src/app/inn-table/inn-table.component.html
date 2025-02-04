@@ -13,30 +13,35 @@
     <button class="outline-btn"><img src="icons/arrow-download.svg" /></button>
     <button class="outline-btn"><img src="icons/settings.svg" /></button>
 </div>
+
 <div class="inn-table">
     <div class="inn-table-header">
         <div class="inn-pinned-left-header" [style.width.px]="leftPinnedWidth">
             @for (header of _leftPinnedColumns; track $index) {
-            <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'left' }"></ng-container>
+            <ng-container
+                *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'left' }"></ng-container>
             }
         </div>
         <div class="inn-header-viewport" #headerContainer (scroll)="headerScrolled($event)">
             <div class="inn-header-container">
                 <div class="inn-header-group" [style.height.px]="rowHeight">
                     @for (header of _centerColumnGroup; track $index) {
-                    <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'center' }"></ng-container>
+                    <ng-container
+                        *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'center' }"></ng-container>
                     }
                 </div>
                 <div class="inn-header-row" [style.height.px]="rowHeight">
                     @for (header of _centerColumns; track $index) {
-                        <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'center' }"></ng-container>
+                    <ng-container
+                        *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'center' }"></ng-container>
                     }
                 </div>
             </div>
         </div>
         <div class="inn-pinned-right-header" [style.width.px]="rightPinnedWidth">
             @for (header of _rightPinnedColumns; track $index) {
-            <ng-container *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'right' }"></ng-container>
+            <ng-container
+                *ngTemplateOutlet="headerTemplate; context: { header: header, index: $index, align: 'right' }"></ng-container>
             }
         </div>
     </div>
@@ -47,14 +52,13 @@
     <div class="inn-table-body">
         <ng-container *ngTemplateOutlet="bodyWrapper; context: { rowData: filteredData }"></ng-container>
     </div>
-    <div class="inn-floating-bottom"></div>
 </div>
 <div class="inn-pagination-panel">
     <span><b>Showing: </b>{{currentItemsCount}} of {{totalItems}}</span>
     <div class="mx-auto"></div>
     <select class="items-per-page" (change)="changeItemsPerPage($event)">
         @for (option of itemsPerPageOptions; track $index) {
-            <option [value]="option">{{ option }}</option>
+        <option [value]="option">{{ option }}</option>
         }
     </select>
     <span class="secondary-text">rows / page</span>
@@ -62,7 +66,6 @@
         <img src="icons/chevron-left.svg" class="icon" />
         Previous
     </button>
-    <!-- <span>{{ currentPage }} / {{ totalPages }}</span> -->
     <button class="next" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
         Next
         <img src="icons/chevron-right.svg" class="icon" />
@@ -70,16 +73,23 @@
 </div>
 
 <ng-template #headerTemplate let-header="header" let-index="index" let-align="align">
-    <div class="inn-table-header-cell" [innColumnResize]="header" (columnWidthChange)="onColumnWidthChange($event, index, align, header)"
-        [ngStyle]="getCombinedHeaderStyles(header)" (click)="onHeaderClick($event, header)">
+
+    @if (header.layoutStyles) {
+    <div class="inn-table-header-cell" [innColumnResize]="header"
+        (columnWidthChange)="onColumnWidthChange($event, index, align, header)"
+        [style.height.px]="header.layoutStyles.height" 
+        [style.top.px]="header.layoutStyles.top" 
+        [style.width.px]="header.layoutStyles.width"
+        [style.left.px]="header.layoutStyles.left" 
+        (click)="onHeaderClick($event, header)">
         <span class="label text-truncate-1">{{ header.field }}</span>
         @if (currentSortColumn === header) {
         <div class="sort-icon-wrapper">
             @if (currentSortDirection == 'asc') {
-                <img src="icons/sort-arrow-up.svg" class="sort-icon" />
+            <img src="icons/sort-arrow-up.svg" class="sort-icon" />
             }
             @if (currentSortDirection == 'desc') {
-                <img src="icons/sort-arrow-down.svg" class="sort-icon" />
+            <img src="icons/sort-arrow-down.svg" class="sort-icon" />
             }
         </div>
         }
@@ -110,6 +120,8 @@
             </mat-menu>
         </div>
     </div>
+    }
+
 </ng-template>
 
 <ng-template #bodyWrapper let-rowData="rowData">
@@ -119,7 +131,8 @@
     </div>
     <div class="inn-center-cols-container" #bodyContainer [style.height.px]="rowHeight * rowData.length"
         (scroll)="bodyScrolled($event)">
-        <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _centerColumns, data: rowData }"></ng-container>
+        <ng-container
+            *ngTemplateOutlet="bodyTemplate; context: { columns: _centerColumns, data: rowData }"></ng-container>
     </div>
     <div class="inn-pinned-right-cols-container" [style.width.px]="rightPinnedWidth">
         <ng-container
@@ -130,11 +143,18 @@
 <ng-template #bodyTemplate let-columns="columns" let-data="data">
     @for (row of data; track $index; let i=$index) {
     <div class="inn-table-row" [attr.data-index]="i" 
-        (mouseenter)="onRowMouseEntered(row)" (mouseleave)="onRowMouseLeave(row)"
-        [style.height.px]="rowHeight" [style.transform]="'translateY(' + row.styles.translateY + 'px)'"
-        [class.inn-table-row-hovered]="row.hovered">
+        (mouseenter)="onRowMouseEntered(row)"
+        (mouseleave)="onRowMouseLeave(row)" [style.height.px]="rowHeight"
+        [style.transform]="'translateY(' + row.styles.translateY + 'px)'" 
+        [class.inn-table-row-hovered]="row.hovered"
+        >
         @for (column of columns; track j; let j = $index) {
-            <inn-table-cell class="inn-table-cell" [ngStyle]="column.layoutStyles" [value]="row[column.field]" [rowData]="row" [colDef]="column" />
+        <inn-table-cell class="inn-table-cell"
+            [style.width.px]="column.layoutStyles.width"
+            [style.left.px]="column.layoutStyles.left" 
+            [value]="row[column.field]"
+            [rowData]="row" 
+            [colDef]="column" />
         }
     </div>
     }

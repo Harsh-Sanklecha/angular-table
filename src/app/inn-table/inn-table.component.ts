@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren, ViewContainerRef } from '@angular/core';
-import { CELL_DATA_TYPE, ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
+import { ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
-import { NgStyle, NgTemplateOutlet } from '@angular/common';
+import { JsonPipe, NgStyle, NgTemplateOutlet } from '@angular/common';
 import { InnTableCellComponent } from './components/inn-table-cell/inn-table-cell.component';
 import { FormsModule } from '@angular/forms';
 import { InnTableService } from './inn-table.service';
@@ -9,12 +9,15 @@ import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-inn-table',
-  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, NgStyle, FormsModule, MatMenuModule],
+  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, FormsModule, MatMenuModule, JsonPipe],
   templateUrl: './inn-table.component.html',
   styleUrl: './inn-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InnTable implements OnChanges {
+  @ViewChild('headerContainer') headerContainer!: ElementRef<HTMLDivElement>;
+  @ViewChildren('bodyContainer') bodyContainers!: ElementRef<HTMLDivElement>[];
+
   @Input() rowModelType: 'clientSide' | 'serverSide' = 'clientSide';
 
   @Input() columnDefs: ColDef[] = [];
@@ -31,19 +34,18 @@ export class InnTable implements OnChanges {
   @Input() currentPage: number = 1;
   @Input() itemsPerPage: number = 20;
   @Input() totalItems: number = 0;
-  
-
-  @ViewChild('headerContainer') headerContainer!: ElementRef<HTMLDivElement>;
-  @ViewChildren('bodyContainer') bodyContainers!: ElementRef<HTMLDivElement>[];
 
   filteredData: any[] = []
 
   searchTerm!: string
 
   leftPinnedWidth: number = 0;
+  centerWidth: number = 0;
   rightPinnedWidth: number = 0;
 
+  _leftColumnGroup: ProcessedColumn[] = []
   _centerColumnGroup: ProcessedColumn[] = []
+  _rightColumnGroup: ProcessedColumn[] = []
 
   _leftPinnedColumns: ProcessedColumn[] = []
   _centerColumns: ProcessedColumn[] = []
@@ -59,7 +61,6 @@ export class InnTable implements OnChanges {
     private innTableService: InnTableService
   ) { }
 
-  private hasHeader: boolean = false
 
   get totalPages() {
     return Math.ceil(this.rowData.length / this.itemsPerPage);
@@ -71,7 +72,6 @@ export class InnTable implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['columnDefs'] || changes['rowData']) {
-      this.hasHeader = this.columnDefs.some(colDef => colDef.children?.length);
       this.rowData = this.rowData.map((each, index) => ({ ...each, id: index }))
       this.filteredData = this.paginatedData()
 
@@ -79,72 +79,127 @@ export class InnTable implements OnChanges {
     }
   }
 
+  #convertCamelToTitleCase(str: string) {
+    return str
+      .replace(/([A-Z])/g, ' $1')  // Add space before uppercase letters
+      .replace(/^./, match => match.toUpperCase()); // Capitalize first letter
+  }
+  
+  #hasParentHeader() {
+    return this.columnDefs.some(colDef => colDef.children?.length);
+  }
+
   #initializeTable() {
     this._leftPinnedColumns = []
     this._centerColumns = []
     this._rightPinnedColumns = []
 
-    // initiate table
-    let centerPosition = 0;
+    const formattedColumns = []
+    const groupedColumns = []
 
-    for (let i = 0; i < this.columnDefs.length; i++) {
+    if (this.rowSelection) {
+      groupedColumns.push({ layoutStyles: { width: 48, top: 0 } })
+      formattedColumns.push({
+        cellType: 'actions',
+        layoutStyles: { width: 48, top: 0 }
+      })
+    }
+
+    for(let i = 0; i< this.columnDefs.length; i++) {
       const colDef = this.columnDefs[i];
-      if (colDef.children?.length) {
 
-        this._centerColumnGroup.push({ 
-          ...colDef, 
-          field: colDef.headerName,
+      // if the column has children, group them
+      if (colDef.children?.length) {
+        groupedColumns.push({
+          cellType: 'grouped',
           index: i,
-          styles: { 
-            width: `${this.columnWidth * colDef.children.length}px`, 
-            left: `${centerPosition}px`, 
-            top: '0px',
-            height: `${this.rowHeight}px`
-          } });
-        this.columnDefs.splice(i + 1, 0, ...colDef.children.map(each => ({...each, parentHeader: colDef.headerName}))); // TODO: Parent header should be changed to index or reference
+          field: colDef.headerName, 
+          children: colDef.children,
+          layoutStyles: { width: this.columnWidth * colDef.children.length, height: this.rowHeight, top: 0 },
+          ...colDef
+        })
+        this.columnDefs.splice(i + 1, 0, ...colDef.children.map(each => ({ ...each, parentHeader: colDef.headerName })))
       } else {
-        const processedColumn: ProcessedColumn = { ...colDef, index: i };
-        switch (colDef.pinned) {
-          case 'left':
-            processedColumn.layoutStyles = {
-              width: `${this.columnWidth}px`,
-              left: `${this.leftPinnedWidth}px`,
-            }
-            processedColumn.styles = {
-              top: this.hasHeader && colDef.parentHeader ? `${this.rowHeight}px` : '0px',
-              height: this.hasHeader && colDef.parentHeader ? `${this.rowHeight}px` : `100%`
-            };
-            this._leftPinnedColumns.push(processedColumn);
-            this.leftPinnedWidth += this.columnWidth;
-            break;
-          case 'right':
-            processedColumn.layoutStyles = {
-              width: `${this.columnWidth}px`,
-              left: `${this.rightPinnedWidth}px`,
-            }
-            processedColumn.styles = {
-              top: this.hasHeader && colDef.parentHeader ? `${this.rowHeight}px` : '0px',
-              height: this.hasHeader && colDef.parentHeader ? `${this.rowHeight}px` : `100%`
-            };
-            this._rightPinnedColumns.push(processedColumn);
-            this.rightPinnedWidth += this.columnWidth;
-            break;
-          default:
-            processedColumn.layoutStyles = {
-              width: `${this.columnWidth}px`,
-              left: `${centerPosition}px`,
-            }
-            processedColumn.styles = {
-              top: this.hasHeader && colDef.parentHeader ? `${this.rowHeight}px` : '0px',
-              height: this.hasHeader && colDef.parentHeader ? `${this.rowHeight}px` : `100%`
-            };
-            this._centerColumns.push(processedColumn);
-            centerPosition += this.columnWidth;
+
+        if (!colDef.parentHeader) {
+          groupedColumns.push({
+            ...colDef,
+            cellType: 'grouped',
+            index: i,
+            field: '',
+            layoutStyles: { width: this.columnWidth, top: 0, height: 0 }
+          })
         }
+        formattedColumns.push({
+          ...colDef,
+          cellType: 'data',
+          index: i,
+          layoutStyles: { width: this.columnWidth, top: colDef.parentHeader ? this.rowHeight : 0, height: colDef.parentHeader ? this.rowHeight : 2 * this.rowHeight }
+        })
       }
     }
 
+    this.#initializeHeader(groupedColumns)
+    this.#initializeHeader(formattedColumns)
+
     this.#initializeRowData()
+  }
+
+  #initializeHeader(colDefs: any[]) {
+    this.centerWidth = 0
+    this.leftPinnedWidth = 0
+    this.rightPinnedWidth = 0
+
+    for(let i=0; i<colDefs.length; i++) {
+      const colDef = colDefs[i];
+
+      switch (colDef.pinned) {
+        case 'left':
+          this.pinColumnLeft(colDef)
+          break;
+        case 'right':
+          this.pinColumnRight(colDef)
+          break;
+        default:
+          this.centerColumn(colDef)
+      }
+    }
+  }
+
+  centerColumn(column: ProcessedColumn) {
+    column.layoutStyles!['left'] = this.centerWidth
+    this.centerWidth += column.layoutStyles!['width'] ?? this.columnWidth;
+    
+    const isGroupedHeader = column.cellType === 'grouped';
+    if (isGroupedHeader) {
+      this._centerColumnGroup.push(column);
+    }else {
+      this._centerColumns.push(column);
+    }
+  }
+
+  pinColumnLeft(column: ProcessedColumn) {
+    column.layoutStyles!['left'] = this.leftPinnedWidth
+    this.leftPinnedWidth += column.layoutStyles!['width'] ?? this.columnWidth;
+
+    const isGroupedHeader = column.cellType === 'grouped';
+    if (isGroupedHeader) {
+      this._leftColumnGroup.push(column);
+    } else {
+      this._leftPinnedColumns.push(column);
+    }
+  }
+
+  pinColumnRight(column: ProcessedColumn) {
+    column.layoutStyles!['left'] = this.rightPinnedWidth
+    this.rightPinnedWidth += column.layoutStyles!['width'] ?? this.columnWidth;
+
+    const isGroupedHeader = column.cellType === 'grouped';
+    if (isGroupedHeader) {
+      this._rightColumnGroup.push(column);
+    } else {
+      this._rightPinnedColumns.push(column);
+    }
   }
 
   #initializeRowData() {
@@ -165,7 +220,7 @@ export class InnTable implements OnChanges {
 
   onColumnWidthChange(width: number, index: number, align: 'left' | 'center' | 'right', header: ProcessedColumn) {
     if (header.children?.length) {
-      this.onGroupedColumnWidthChange(width, index, header);
+      this.onGroupedColumnWidthChange(width, header);
       return;
     }
 
@@ -173,55 +228,50 @@ export class InnTable implements OnChanges {
     switch (align) {
       case 'left':
         columns = this._leftPinnedColumns;
-        this.leftPinnedWidth = columns.reduce((acc, curr) => acc + +((curr.layoutStyles?.['width'] as string)?.replace('px', '') ?? 0), 0);
+        this.leftPinnedWidth = columns.reduce((acc, curr) => acc + +(curr.layoutStyles?.['width'] ?? 0), 0);
         break;
       case 'center':
         columns = this._centerColumns;
         break;
       case 'right':
         columns = this._rightPinnedColumns;
-        this.rightPinnedWidth = columns.reduce((acc, curr) => acc + +((curr.layoutStyles?.['width'] as string)?.replace('px', '') ?? 0), 0);
+        this.rightPinnedWidth = columns.reduce((acc, curr) => acc + +(curr.layoutStyles?.['width'] ?? 0), 0);
         break;
     }
-    (columns[index].layoutStyles as { [key: string]: any })['width'] = width + 'px';
+    (columns[index].layoutStyles as { [key: string]: any })['width'] = width
 
+    // Iteratively update the left position of the next columns
     for (let i = index + 1; i < columns.length; i++) {
-      const lastColumn = columns[i - 1].layoutStyles as { [key: string]: any }
-      (columns[i].layoutStyles as { [key: string]: any })['left'] = +(lastColumn?.['left']?.replace('px', '') ?? 0) + +(lastColumn?.['width']?.replace('px', '') || 0) + 'px';
+      const lastColumn = columns[i - 1].layoutStyles as { [key: string]: number }
+      (columns[i].layoutStyles as { [key: string]: number })['left'] = +(lastColumn?.['left'] ?? 0) + +(lastColumn?.['width']|| 0)
 
       if (columns[i].parentHeader) {
         const groupColumn = this._centerColumnGroup.find(col => col.headerName === columns[i].parentHeader);
         const firstChild = this._centerColumns.find(col => col.parentHeader === columns[i].parentHeader);
 
-        if (groupColumn && firstChild) {      
-          groupColumn.styles = {
-            ...groupColumn.styles,
-            left: firstChild.layoutStyles?.['left'] as string
-          }
+        if (groupColumn && firstChild) {
+          groupColumn.layoutStyles!['left'] = firstChild.layoutStyles?.['left'] ?? 0
         }
       }
     }
 
+    // Update the width of the group column
     if(header.parentHeader) {
-      const groupColumnIndex = this._centerColumnGroup.findIndex(col => col.headerName === header.parentHeader); // TODO Change to index or reference
+      const groupColumnIndex = this._centerColumnGroup.findIndex(col => col.headerName === header.parentHeader);
       const groupColumn = this._centerColumnGroup[groupColumnIndex];
       const children = this._centerColumns.filter(col => col.parentHeader === header.parentHeader);
 
-      if(groupColumn) {
-        groupColumn.styles = {
-          ...groupColumn.styles,
-          width: children?.reduce((acc, curr) => acc + +((curr.layoutStyles?.['width'] as string)?.replace('px', '') ?? 0), 0) + 'px'
-        }
+      // Update the width of the group column by calculating the sum of the children
+      groupColumn.layoutStyles!['width'] = children?.reduce((acc, curr) => acc + +(curr.layoutStyles?.['width'] ?? 0), 0)
 
-        for (let i = groupColumnIndex + 1; i < this._centerColumnGroup.length; i++) {
-          const lastColumn = this._centerColumnGroup[i - 1].styles as { [key: string]: any }
-          (this._centerColumnGroup[i].styles as { [key: string]: any })['left'] = +(lastColumn?.['left']?.replace('px', '') ?? 0) + +(lastColumn?.['width']?.replace('px', '') || 0) + 'px';
-        }
+      for (let i = groupColumnIndex + 1; i < this._centerColumnGroup.length; i++) {
+        const lastColumn = this._centerColumnGroup[i - 1].layoutStyles as { [key: string]: number }
+        this._centerColumnGroup[i].layoutStyles!['left'] = +(lastColumn?.['left'] ?? 0) + +(lastColumn?.['width'] || 0);
       }
     }
   }
 
-  onGroupedColumnWidthChange(width: number, index: number, header: ProcessedColumn) {
+  onGroupedColumnWidthChange(width: number, header: ProcessedColumn) {
     const children = this._centerColumns.filter(col => col.parentHeader === header.headerName)
 
     for(const child of children) {
@@ -302,13 +352,6 @@ export class InnTable implements OnChanges {
     sortedData.forEach((data, index) => translateYMapping.set(data.id, index * this.rowHeight));
 
     this.filteredData = this.rowData.map(data => ({ ...data, styles: { translateY: translateYMapping.get(data.id) } }));
-  }
-
-  getCombinedHeaderStyles(column: ProcessedColumn) {
-    return {
-      ...column.layoutStyles,
-      ...column.styles
-    }
   }
 
   searchTextChanged() {
