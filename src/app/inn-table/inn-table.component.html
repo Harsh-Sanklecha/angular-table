@@ -87,6 +87,9 @@
         (click)="onHeaderClick($event, header)"
         (columnWidthChange)="onColumnWidthChange($event, index, header)"
         >
+        @if (rowSelection.mode === 'multiRow' && header.cellType === 'actions') {
+        <input type="checkbox">
+        }
         <span class="label text-truncate-1">{{ header.formattedName }}</span>
         @if (currentSortColumn === header) {
         <div class="sort-icon-wrapper">
@@ -100,6 +103,8 @@
         }
 
         <div class="mx-auto"></div>
+
+        @if (header.cellType == 'data') {
         <div class="menu">
             <div [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
                 <img src="icons/more-vert.svg" class="sort-icon" />
@@ -114,16 +119,17 @@
                     <span>Sort Desceding</span>
                 </button>
                 <button mat-menu-item [matMenuTriggerFor]="pinColumns">
-                    <img src="icons/pin-outline.svg" class="menu-icon" />
+                    <img src="icons/pin.svg" class="menu-icon" />
                     <span>Pin Columns</span>
                 </button>
                 <mat-menu #pinColumns="matMenu">
                     <button mat-menu-item [disabled]="align === 'center'">No Pin</button>
-                    <button mat-menu-item [disabled]="align === 'left'">Left Pin</button>
+                    <button mat-menu-item [disabled]="align === 'left'" (click)="pinColumn(header, 'left')">Left Pin</button>
                     <button mat-menu-item [disabled]="align === 'right'">Right Pin</button>
                 </mat-menu>
             </mat-menu>
         </div>
+        }
     </div>
     }
 </ng-template>
@@ -151,19 +157,35 @@
     <div class="inn-table-row" 
         (mouseenter)="onRowMouseEntered(row)"
         (mouseleave)="onRowMouseLeave(row)"
-        [attr.data-index]="i"
         [style.height.px]="rowHeight"
         [style.transform]="'translateY(' + row.styles.translateY + 'px)'" 
         [class.inn-table-row-hovered]="row.hovered"
     >
         @for (column of columns; track j; let j = $index) {
-        <inn-table-cell class="inn-table-cell"
-            [style.width.px]="column.layoutStyles.width"
-            [style.left.px]="column.layoutStyles.left" 
-            [value]="row[column.field]"
-            [rowData]="row" 
-            [colDef]="column" 
-        />
+            @switch (column.cellType) {
+                @case ('actions') {
+                    <div
+                        class="inn-table-cell"
+                        [style.width.px]="column.layoutStyles.width"
+                        [style.left.px]="column.layoutStyles.left" 
+                        >
+                        @if (pinRows) {
+                            <img [src]="'icons/'+(row.pinned ? 'unpin' : 'pin') +'.svg'" class="menu-icon cursor-pointer" (click)="pinUnpinRowTop(row, i)" />
+                        }
+                        <input type="checkbox">
+                    </div>
+
+                }
+                @case ('data') {
+                     <inn-table-cell class="inn-table-cell"
+                        [style.width.px]="column.layoutStyles.width"
+                        [style.left.px]="column.layoutStyles.left" 
+                        [value]="row[column.field]"
+                        [rowData]="row" 
+                        [colDef]="column" 
+                    />
+                }
+            }
         }
     </div>
     }

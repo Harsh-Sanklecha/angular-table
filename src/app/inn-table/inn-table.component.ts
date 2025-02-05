@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
 import { ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
-import { JsonPipe, NgStyle, NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { InnTableCellComponent } from './components/inn-table-cell/inn-table-cell.component';
 import { FormsModule } from '@angular/forms';
 import { InnTableService } from './inn-table.service';
@@ -9,7 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-inn-table',
-  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, FormsModule, MatMenuModule, JsonPipe],
+  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, FormsModule, MatMenuModule],
   templateUrl: './inn-table.component.html',
   styleUrl: './inn-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -19,6 +19,7 @@ export class InnTable implements OnChanges {
   @ViewChildren('bodyContainer') bodyContainers!: ElementRef<HTMLDivElement>[];
 
   @Input() rowModelType: 'clientSide' | 'serverSide' = 'clientSide';
+  @Input() pinRows: boolean = false;
 
   @Input() columnDefs: ColDef[] = [];
   @Input() rowData: any[] = [];
@@ -97,11 +98,12 @@ export class InnTable implements OnChanges {
     const formattedColumns = []
     const groupedColumns = []
 
-    if (this.rowSelection) {
-      groupedColumns.push({ layoutStyles: { width: 48, top: 0 } })
+    if (this.rowSelection || this.pinRows) {
+      const width = 48 * 2
+      groupedColumns.push({ layoutStyles: { width, top: 0, height: 0 } })
       formattedColumns.push({
         cellType: 'actions',
-        layoutStyles: { width: 48, top: 0 }
+        layoutStyles: { width, top: 0 }
       })
     }
 
@@ -228,18 +230,31 @@ export class InnTable implements OnChanges {
     }
   }
 
+  pinColumn(column: ProcessedColumn, pinned: 'left' | 'right') {
+    switch (pinned) {
+      case 'left':
+        this.pinColumnLeft(column)
+        break;
+      case 'right':
+        this.pinColumnRight(column)
+        break;
+    }
+
+  }
+
   #initializeRowData() {
     this.filteredData = this.#transformRows(this.filteredData)
-    this.pinnedTopRowData = this.#transformRows(this.pinnedTopRowData)
+    this.pinnedTopRowData = this.#transformRows(this.pinnedTopRowData, 'top')
 
     if (!this.totalItems) {
       this.totalItems = this.rowData.length;
     }
   }
 
-  #transformRows(rows: any[]) {
+  #transformRows(rows: any[], pinned?: 'top' | 'bottom') {
     return rows.map((data, index) => ({
       ...data,
+      ...(pinned ? {pinned} : {}),
       styles: { translateY: index * this.rowHeight }
     }))
   }
@@ -335,6 +350,7 @@ export class InnTable implements OnChanges {
   }
 
   onHeaderClick(event: Event, column: ProcessedColumn) {
+    if(column.cellType === 'actions') return
     if (column.sortable === false) return;
 
     if (this.currentSortColumn === column) {
@@ -417,6 +433,25 @@ export class InnTable implements OnChanges {
 
     this.currentPage = 1
     this.#initializeRowData()
+  }
+
+  pinUnpinRowTop(row: any, index: number) {
+    if(row.pinned) {
+      row.pinned = undefined;
+      this.filteredData.push(row);
+      this.filteredData = this.#transformRows(this.filteredData);
+
+      this.pinnedTopRowData.splice(index, 1);
+      this.pinnedTopRowData = this.#transformRows(this.pinnedTopRowData);
+    }else {
+      row.pinned = 'top';
+      this.pinnedTopRowData.push(row);
+      this.pinnedTopRowData = this.#transformRows(this.pinnedTopRowData);
+      
+      this.filteredData.splice(index, 1);
+      this.filteredData = this.#transformRows(this.filteredData);
+    }
+    this.onRowMouseLeave(row)
   }
 
   onRowMouseEntered(row: any) {

@@ -6,7 +6,7 @@ import { HeaderComponent } from '../inn-table/components/header/header.component
 
 @Component({
   selector: 'app-ag-grid',
-  imports: [AgGridAngular, InnTable, HeaderComponent],
+  imports: [AgGridAngular, InnTable],
   templateUrl: './ag-grid.component.html',
   styleUrl: './ag-grid.component.scss'
 })
@@ -26,7 +26,7 @@ export class AgGridComponent {
     {
       headerName: 'Power & Country',
       children: [
-        { field: 'horsePower', pinned: 'left' },
+        { field: 'horsePower' },
         { field: 'country' },
       ],
     },
