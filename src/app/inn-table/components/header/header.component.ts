@@ -11,6 +11,7 @@ export class HeaderComponent implements ICellRendererComp {
   params: any;
 
   innInit(params: ICellRendererParams): void {
+    this.params = params;
   }
 
 }

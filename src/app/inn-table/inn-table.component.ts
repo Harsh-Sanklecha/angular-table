@@ -95,6 +95,10 @@ export class InnTable implements OnChanges {
     this._centerColumns = []
     this._rightPinnedColumns = []
 
+    this._leftColumnGroup = []
+    this._centerColumnGroup = []
+    this._rightColumnGroup = []
+
     const formattedColumns = []
     const groupedColumns = []
 
@@ -230,16 +234,16 @@ export class InnTable implements OnChanges {
     }
   }
 
-  pinColumn(column: ProcessedColumn, pinned: 'left' | 'right') {
-    switch (pinned) {
-      case 'left':
-        this.pinColumnLeft(column)
-        break;
-      case 'right':
-        this.pinColumnRight(column)
-        break;
+  pinColumn(column: ProcessedColumn, pinned?: 'left' | 'right') {
+    if (column.parentHeader) {
+      const parentColumn = this.columnDefs.find(col => col.headerName === column.parentHeader)
+      if(parentColumn?.children?.length) {
+        parentColumn.children.find(child => child.field === column.field)!.pinned = pinned
+      }
+    }else {
+      this.columnDefs.find(col => col.field === column.field)!.pinned = pinned
     }
-
+    this.#initializeTable()
   }
 
   #initializeRowData() {

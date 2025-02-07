@@ -20,9 +20,8 @@ export class AgGridComponent {
   // Column Definitions: Defines the columns to be displayed.
   colDefs: any[] = [
     { field: "make", pinned: 'left' },
-    { field: "customComponent", cellRenderer: HeaderComponent },
     { field: "model", editable: true },
-    { field: "price" },
+    { field: "price", cellRenderer: HeaderComponent },
     {
       headerName: 'Power & Country',
       children: [

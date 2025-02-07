@@ -13,7 +13,6 @@
     <button class="outline-btn"><img src="icons/arrow-download.svg" /></button>
     <button class="outline-btn"><img src="icons/settings.svg" /></button>
 </div>
-
 <div class="inn-table">
     <div class="inn-table-header">
         <div class="inn-pinned-left-header" [style.width.px]="leftPinnedWidth">
@@ -123,9 +122,9 @@
                     <span>Pin Columns</span>
                 </button>
                 <mat-menu #pinColumns="matMenu">
-                    <button mat-menu-item [disabled]="align === 'center'">No Pin</button>
+                    <button mat-menu-item [disabled]="align === 'center'" (click)="pinColumn(header)">No Pin</button>
                     <button mat-menu-item [disabled]="align === 'left'" (click)="pinColumn(header, 'left')">Left Pin</button>
-                    <button mat-menu-item [disabled]="align === 'right'">Right Pin</button>
+                    <button mat-menu-item [disabled]="align === 'right'" (click)="pinColumn(header, 'right')">Right Pin</button>
                 </mat-menu>
             </mat-menu>
         </div>
@@ -137,27 +136,32 @@
 
 <!-- #region Body Wrapper Template -->
 <ng-template #bodyWrapper let-rowData="rowData">
-    <div class="inn-pinned-left-cols-container" [style.width.px]="leftPinnedWidth">
-        <ng-container
-            *ngTemplateOutlet="bodyTemplate; context: { columns: _leftPinnedColumns, data: rowData }"></ng-container>
+    <div class="inn-pinned-left-cols-container" 
+        [style.width.px]="leftPinnedWidth" 
+        [style.height.px]="rowHeight * rowData.length">
+        <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _leftPinnedColumns, data: rowData }"></ng-container>
     </div>
-    <div class="inn-center-cols-container" #bodyContainer [style.height.px]="rowHeight * rowData.length"
+
+    <div class="inn-center-cols-container" #bodyContainer 
+        [style.height.px]="rowHeight * rowData.length"
         (scroll)="bodyScrolled($event)">
-        <ng-container
-            *ngTemplateOutlet="bodyTemplate; context: { columns: _centerColumns, data: rowData }"></ng-container>
+        <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _centerColumns, data: rowData, width: centerWidth }"></ng-container>
     </div>
-    <div class="inn-pinned-right-cols-container" [style.width.px]="rightPinnedWidth">
-        <ng-container
-            *ngTemplateOutlet="bodyTemplate; context: { columns: _rightPinnedColumns, data: rowData }"></ng-container>
+
+    <div class="inn-pinned-right-cols-container" 
+        [style.width.px]="rightPinnedWidth" 
+        [style.height.px]="rowHeight * rowData.length">
+        <ng-container *ngTemplateOutlet="bodyTemplate; context: { columns: _rightPinnedColumns, data: rowData }"></ng-container>
     </div>
 </ng-template>
 
-<ng-template #bodyTemplate let-columns="columns" let-data="data">
+<ng-template #bodyTemplate let-columns="columns" let-data="data" let-width="width">
     @for (row of data; track $index; let i=$index) {
     <div class="inn-table-row" 
         (mouseenter)="onRowMouseEntered(row)"
         (mouseleave)="onRowMouseLeave(row)"
         [style.height.px]="rowHeight"
+        [style.width.px]="width"
         [style.transform]="'translateY(' + row.styles.translateY + 'px)'" 
         [class.inn-table-row-hovered]="row.hovered"
     >
