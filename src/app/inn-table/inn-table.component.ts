@@ -6,6 +6,7 @@ import { InnTableCellComponent } from './components/inn-table-cell/inn-table-cel
 import { FormsModule } from '@angular/forms';
 import { InnTableService } from './inn-table.service';
 import { MatMenuModule } from '@angular/material/menu';
+import { cloneDeep } from '../shared/utils';
 
 @Component({
   selector: 'app-inn-table',
@@ -112,8 +113,10 @@ export class InnTable implements OnChanges {
     }
 
     const pinnedPositions = ['left', 'center', 'right'];
-    for(let i = 0; i< this.columnDefs.length; i++) {
-      const colDef = this.columnDefs[i];
+    const columns = cloneDeep(this.columnDefs);
+
+    for(let i = 0; i< columns.length; i++) {
+      const colDef = columns[i];
       colDef.formattedName = this.#convertCamelToTitleCase(colDef.field ?? '');
 
       // if the column has children then add group 
@@ -147,7 +150,7 @@ export class InnTable implements OnChanges {
         })
 
 
-        this.columnDefs.splice(i + 1, 0, ...colDef.children.map(each => ({ ...each, parentHeader: colDef.headerName })))
+        columns.splice(i + 1, 0, ...colDef.children.map(each => ({ ...each, parentHeader: colDef.headerName })))
       } else {
         if (!colDef.parentHeader) {
           groupedColumns.push({
