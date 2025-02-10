@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
 import { ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
-import { NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
 import { InnTableCellComponent } from './components/inn-table-cell/inn-table-cell.component';
 import { FormsModule } from '@angular/forms';
-import { InnTableService } from './inn-table.service';
+import { InnTableService } from './services/inn-table.service';
 import { MatMenuModule } from '@angular/material/menu';
 import { cloneDeep } from '../shared/utils';
+import { SelectionService } from './services/selection.service';
 
 @Component({
   selector: 'app-inn-table',
-  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, FormsModule, MatMenuModule],
+  imports: [ColumnResizeDirective, InnTableCellComponent, NgTemplateOutlet, FormsModule, MatMenuModule, AsyncPipe],
   templateUrl: './inn-table.component.html',
   styleUrl: './inn-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -58,9 +59,12 @@ export class InnTable implements OnChanges {
 
   itemsPerPageOptions = [20, 50, 100];
 
+  selection$ = this.selectionService.selection$;
+
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
-    private innTableService: InnTableService
+    private innTableService: InnTableService,
+    private selectionService: SelectionService<any>
   ) { }
 
   get totalPages() {
@@ -77,6 +81,10 @@ export class InnTable implements OnChanges {
       this.filteredData = this.paginatedData()
 
       this.#initializeTable();
+    }
+
+    if (changes['rowSelection']) {
+      this.selectionService.toggleSelectionMode(this.rowSelection.mode === 'multiRow');
     }
   }
 
@@ -383,6 +391,7 @@ export class InnTable implements OnChanges {
     this.#updateFilteredData();
   }
 
+  // Note: Will add animation when we implement virtual scrolling
   #updateFilteredData() {
     let result = [...this.rowData]
 
@@ -416,7 +425,6 @@ export class InnTable implements OnChanges {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     result = result.slice(startIndex, startIndex + this.itemsPerPage);
 
-    // Add animation styles
     this.filteredData = result.map((data, index) => ({
       ...data,
       styles: {
@@ -464,6 +472,24 @@ export class InnTable implements OnChanges {
     }
     this.onRowMouseLeave(row)
   }
+
+  toggleSelectionMode(isMultiSelect: boolean) {
+    this.selectionService.toggleSelectionMode(isMultiSelect);
+  }
+
+  toggleRowSelection(row: any) {
+    this.selectionService.toggleRowSelection(row, this.filteredData);
+  }
+
+  toggleAllSelection() {
+    this.selectionService.toggleAllSelection(this.filteredData);
+  }
+
+  isSelected(row: any): boolean {
+    return this.selectionService.getSelectedRows()
+      .some(r => r.id === row.id);
+  }
+
 
   hoveredRow!: any
   onRowMouseEntered(row: any) {

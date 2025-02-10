@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InnTableService } from '../../../inn-table.service';
+import { InnTableService } from '../../../services/inn-table.service';
 
 @Component({
   selector: 'inn-checkbox',

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { InnTableService } from '../../../inn-table.service';
+import { InnTableService } from '../../../services/inn-table.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({

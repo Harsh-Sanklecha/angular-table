@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
-import { InnTableService } from '../../../inn-table.service';
+import { InnTableService } from '../../../services/inn-table.service';
 
 
 @Component({

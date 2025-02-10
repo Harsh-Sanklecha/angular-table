@@ -91,7 +91,10 @@
         (columnWidthChange)="onColumnWidthChange($event, index, header)"
         >
         @if (rowSelection.mode === 'multiRow' && header.cellType === 'actions') {
-        <input type="checkbox">
+            <input type="checkbox"
+                [checked]="(selection$ | async)?.isAllSelected"
+                [indeterminate]="(selection$ | async)?.isIndeterminate"
+                (change)="toggleAllSelection()">
         }
         <span class="label text-truncate-1">{{ header.formattedName }}</span>
         @if (currentSortColumn === header) {
@@ -178,7 +181,10 @@
                         @if (pinRows) {
                             <img [src]="'icons/'+(row.pinned ? 'unpin' : 'pin') +'.svg'" class="menu-icon cursor-pointer" (click)="pinUnpinRowTop(row, i)" />
                         }
-                        <input type="checkbox">
+                        <input type="checkbox" 
+                            [checked]="isSelected(row)"
+                            (change)="toggleRowSelection(row)"
+                            >
                     </div>
 
                 }
