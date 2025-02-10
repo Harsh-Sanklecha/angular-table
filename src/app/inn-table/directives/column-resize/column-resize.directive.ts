@@ -32,6 +32,7 @@ export class ColumnResizeDirective implements OnInit, OnDestroy {
 
   private createResizeHandle() {
     this.resizeHandle = this.renderer.createElement('div');
+    this.resizeHandle.onclick = (event) => event.stopPropagation();
     this.renderer.addClass(this.resizeHandle, 'column-resize-handle'); // Styles in inn-table.component.scss
 
     this.renderer.appendChild(this.el.nativeElement, this.resizeHandle);
