@@ -74,7 +74,7 @@
 }
 
 .inn-header-viewport {
-    flex: 1 1 auto;
+    flex: 1;
     overflow-x: auto;
     scrollbar-width: none !important;
 }
@@ -150,7 +150,6 @@
 .inn-table-row {
     position: absolute;
     width: 100%;
-    border-bottom: 1px solid #ccc;
     transition: .3s ease;
 }
 
@@ -164,6 +163,7 @@
     display: flex;
     align-items: center;
     padding-inline: 1rem;
+    border-bottom: 1px solid #ccc;
 }
 
 .sort-icon-wrapper {

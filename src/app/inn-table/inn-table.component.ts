@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, ElementRef, Input, OnChanges, SimpleChanges, ViewChild, ViewChildren } from '@angular/core';
 import { ColDef, IRowSelection, ProcessedColumn, SortDirection } from './inn-table.type';
 import { ColumnResizeDirective } from './directives/column-resize/column-resize.directive';
 import { NgTemplateOutlet } from '@angular/common';
@@ -62,7 +62,6 @@ export class InnTable implements OnChanges {
     private changeDetectorRef: ChangeDetectorRef,
     private innTableService: InnTableService
   ) { }
-
 
   get totalPages() {
     return Math.ceil(this.rowData.length / this.itemsPerPage);
@@ -373,52 +372,57 @@ export class InnTable implements OnChanges {
     }
 
     // Sort the data
-    this.sortData();
+    this.#updateFilteredData();
   }
 
   sortColumn(column: ProcessedColumn, direction: SortDirection) {
     this.currentSortColumn = column;
     this.currentSortDirection = direction;
 
-    this.sortData();
+    this.currentPage = 0
+    this.#updateFilteredData();
   }
 
-  private sortData() {
-    if (!this.currentSortColumn) {
-      return;
+  #updateFilteredData() {
+    let result = [...this.rowData]
+
+    if (this.currentSortDirection) {
+      const field = this.currentSortColumn?.field;
+      const direction = this.currentSortDirection;
+
+      result.sort((a, b) => {
+        const valueA = a[field ?? ''];
+        const valueB = b[field ?? ''];
+
+        if (valueA == null) return direction === 'asc' ? 1 : -1;
+        if (valueB == null) return direction === 'asc' ? -1 : 1;
+
+        return direction === 'asc'
+          ? (valueA > valueB ? 1 : -1)
+          : (valueA < valueB ? 1 : -1);
+      });
+      
     }
 
-    // Server Side Sorting
-    if(this.rowModelType === 'serverSide') {
-      this.innTableService.sortColumn$.next(this.currentSortDirection);
-      return
+    // Calculate total pages
+    const totalPages = Math.ceil(result.length / this.itemsPerPage);
+
+    // Ensure current page is valid
+    if (this.currentPage > totalPages) {
+      this.currentPage = Math.max(0, totalPages - 1);
     }
 
-    if (!this.currentSortDirection) {
-      // Reset to original data if no sorting
-      this.filteredData = this.filteredData.map(data => ({ ...data, styles: { translateY: data.id * this.rowHeight } }));
-      return;
-    }
+    // Apply pagination
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    result = result.slice(startIndex, startIndex + this.itemsPerPage);
 
-    const field = this.currentSortColumn.field;
-    const direction = this.currentSortDirection;
-
-    const sortedData = structuredClone(this.rowData).sort((a, b) => {
-      const valueA = a[field ?? ''];
-      const valueB = b[field ?? ''];
-
-      if (valueA == null) return direction === 'asc' ? 1 : -1;
-      if (valueB == null) return direction === 'asc' ? -1 : 1;
-
-      return direction === 'asc'
-        ? (valueA > valueB ? 1 : -1)
-        : (valueA < valueB ? 1 : -1);
-    });
-
-    const translateYMapping = new Map<number, number>();
-    sortedData.forEach((data, index) => translateYMapping.set(data.id, index * this.rowHeight));
-
-    this.filteredData = this.rowData.map(data => ({ ...data, styles: { translateY: translateYMapping.get(data.id) } }));
+    // Add animation styles
+    this.filteredData = result.map((data, index) => ({
+      ...data,
+      styles: {
+        translateY: index * this.rowHeight
+      }
+    }))
   }
 
   searchTextChanged() {
@@ -429,9 +433,9 @@ export class InnTable implements OnChanges {
     }
 
     if (!this.searchTerm) {
-      this.filteredData = structuredClone(this.rowData)
+      this.filteredData = cloneDeep(this.rowData)
     }else { 
-      this.filteredData = structuredClone(this.rowData).filter(item =>
+      this.filteredData = cloneDeep(this.rowData).filter(item =>
         Object.values(item).some(value =>
           value != null && value.toString().toLowerCase().includes(this.searchTerm.toLowerCase())
         )
@@ -461,12 +465,13 @@ export class InnTable implements OnChanges {
     this.onRowMouseLeave(row)
   }
 
+  hoveredRow!: any
   onRowMouseEntered(row: any) {
-    row.hovered = true;
+    this.hoveredRow = row;
   }
 
   onRowMouseLeave(row: any) {
-    row.hovered = false
+    this.hoveredRow = null
   }
 
   paginatedData() {
@@ -476,11 +481,9 @@ export class InnTable implements OnChanges {
   }
 
   changePage(newPage: number) {
-    if (newPage >= 1 && newPage <= this.totalPages) {
-      this.currentPage = newPage;
-      this.filteredData = this.paginatedData()
-      this.innTableService.pagination$.next(this.currentPage);
-    }
+    this.currentPage = newPage;
+    this.#updateFilteredData()
+    this.innTableService.pagination$.next(this.currentPage);
   }
 
   changeItemsPerPage(event: Event) {

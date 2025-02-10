@@ -15,14 +15,18 @@
 </div>
 <div class="inn-table">
     <div class="inn-table-header">
-        <div class="inn-pinned-left-header" [style.width.px]="leftPinnedWidth">
-            <ng-container *ngTemplateOutlet="headerWrapper; context: { groupedColumns: _leftColumnGroup, columns: _leftPinnedColumns, align: 'left' }"></ng-container>
+        <div class="inn-pinned-left-header" 
+            [style.width.px]="leftPinnedWidth">
+            <ng-container 
+                *ngTemplateOutlet="headerWrapper; context: { groupedColumns: _leftColumnGroup, columns: _leftPinnedColumns, align: 'left' }"></ng-container>
         </div>
-        <div class="inn-header-viewport" #headerContainer (scroll)="headerScrolled($event)">
+        <div class="inn-header-viewport" #headerContainer 
+            (scroll)="headerScrolled($event)">
             <ng-container
                 *ngTemplateOutlet="headerWrapper; context: { groupedColumns: _centerColumnGroup, columns: _centerColumns, align: 'center' }"></ng-container>
         </div>
-        <div class="inn-pinned-right-header" [style.width.px]="rightPinnedWidth">
+        <div class="inn-pinned-right-header" 
+            [style.width.px]="rightPinnedWidth">
             <ng-container
                 *ngTemplateOutlet="headerWrapper; context: { groupedColumns: _rightColumnGroup, columns: _rightPinnedColumns, align: 'right' }"></ng-container>
         </div>
@@ -161,9 +165,7 @@
         (mouseenter)="onRowMouseEntered(row)"
         (mouseleave)="onRowMouseLeave(row)"
         [style.height.px]="rowHeight"
-        [style.width.px]="width"
         [style.transform]="'translateY(' + row.styles.translateY + 'px)'" 
-        [class.inn-table-row-hovered]="row.hovered"
     >
         @for (column of columns; track j; let j = $index) {
             @switch (column.cellType) {
