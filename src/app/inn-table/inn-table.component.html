@@ -1,17 +1,18 @@
 <div class="inn-table-options">
-    <button class="primary-btn">
+    <!-- <button class="primary-btn">
         <img src="icons/add.svg" />
         Add
-    </button>
+    </button> -->
     <div class="search-input-wrapper">
         <img src="icons/search.svg" />
         <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="searchTextChanged()" placeholder="Search">
     </div>
     <div class="mx-auto"></div>
-    <button class="outline-btn"><img src="icons/filter.svg" /></button>
+    <ng-content></ng-content>
+    <!-- <button class="outline-btn"><img src="icons/filter.svg" /></button>
     <button class="outline-btn"><img src="icons/arrow-upload.svg" /></button>
     <button class="outline-btn"><img src="icons/arrow-download.svg" /></button>
-    <button class="outline-btn"><img src="icons/settings.svg" /></button>
+    <button class="outline-btn"><img src="icons/settings.svg" /></button> -->
 </div>
 <div class="inn-table">
     <div class="inn-table-header">

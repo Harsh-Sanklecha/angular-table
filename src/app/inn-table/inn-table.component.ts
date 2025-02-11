@@ -77,7 +77,8 @@ export class InnTable implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['columnDefs'] || changes['rowData']) {
-      this.rowData = this.rowData.map((each, index) => ({ ...each, id: index }))
+      this.rowData = this.rowData.map((each, index) => ({ ...each, id: 'row-' + index }))
+      this.pinnedTopRowData = this.pinnedTopRowData.map((each, index) => ({ ...each, id: 'pinned-top-row-' + index }))
       this.filteredData = this.paginatedData()
 
       this.#initializeTable();
@@ -478,11 +479,13 @@ export class InnTable implements OnChanges {
   }
 
   toggleRowSelection(row: any) {
-    this.selectionService.toggleRowSelection(row, this.filteredData);
+    const data = [...this.rowData, ...this.pinnedTopRowData];
+    this.selectionService.toggleRowSelection(row, data);
   }
 
   toggleAllSelection() {
-    this.selectionService.toggleAllSelection(this.filteredData);
+    const data = [...this.rowData, ...this.pinnedTopRowData];
+    this.selectionService.toggleAllSelection(data);
   }
 
   isSelected(row: any): boolean {
